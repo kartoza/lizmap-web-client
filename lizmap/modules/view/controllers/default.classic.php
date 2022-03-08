@@ -16,6 +16,13 @@ use LizmapAdmin\LandingContent;
  */
 class defaultCtrl extends jController
 {
+
+    public function logout()
+    {
+        sagta::clearTokenCache();
+        return self::index();
+    }
+
     /**
      * Displays a list of project for a given repository.
      *
@@ -23,6 +30,8 @@ class defaultCtrl extends jController
      */
     public function index()
     {
+        sagta::checkLogin();
+
         $theme = $this->param('theme');
         if ($theme && preg_match('/^[a-zA-Z0-9\-_]+$/', $theme)) {
             jApp::config()->theme = $theme;
@@ -107,6 +116,8 @@ class defaultCtrl extends jController
         $rep->body->assign('isConnected', jAuth::isConnected());
         $rep->body->assign('user', jAuth::getUserSession());
         $rep->body->assign('allowUserAccountRequests', $services->allowUserAccountRequests);
+        $rep->body->assign('sagtaBaseUrl', getEnv('SAGTA_URL'));
+        $rep->body->assign('sagtaClientId', getEnv('CLIENT_ID'));
 
         // Add Google Analytics ID
         if ($services->googleTag != '' && preg_match('/^G-\w+$/', $services->googleTag) == 1) {

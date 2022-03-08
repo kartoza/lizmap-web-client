@@ -41,6 +41,8 @@ class lizMapCtrl extends jController
      */
     public function index()
     {
+        sagta::checkLogin();
+
         $theme = $this->param('theme');
         if ($theme && preg_match('/^[a-zA-Z0-9\-_]+$/', $theme)) {
             jApp::config()->theme = $theme;
