@@ -14,6 +14,9 @@ class databaseCtrl extends jControllerCmdLine
      * true means that a value should be provided for the option on the command line.
      */
     protected $allowed_options = array(
+        'migratelog' => array(
+            '-resetbefore' => false,
+        ),
         'migrateusers' => array(
             '-resetbefore' => false,
         ),
@@ -59,9 +62,11 @@ class databaseCtrl extends jControllerCmdLine
         /** @var jResponseCmdline $rep */
         $rep = $this->getResponse();
         $logMigrator = new \Lizmap\Logger\MigratorFromSqlite();
+        $rep->addContent("Using this command is deprecated, all commands are now unified in console.php
+        In lizmap folder, use 'php console.php database:migratelog'\n\n");
 
         try {
-            $res = $logMigrator->migrateLog();
+            $res = $logMigrator->migrateLog('lizlog', $this->option('-resetbefore'));
         } catch (\UnexpectedValueException $e) {
             $rep->addContent('Error during the migration: '.$e->getMessage()."\n");
             $rep->setExitCode(1);
@@ -100,6 +105,8 @@ class databaseCtrl extends jControllerCmdLine
         /** @var jResponseCmdline $rep */
         $rep = $this->getResponse();
         $logMigrator = new \Lizmap\Users\MigratorFromSqlite();
+        $rep->addContent("Using this command is deprecated, all commands are now unified in console.php
+        In lizmap folder, use 'php console.php database:migrateusers'\n\n");
 
         try {
             $res = $logMigrator->migrateUsersAndRights($this->option('-resetbefore'));

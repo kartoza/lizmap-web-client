@@ -1,6 +1,19 @@
+/**
+ * @module components/SelectionTool.js
+ * @name SelectionTool
+ * @copyright 2023 3Liz
+ * @author BOISTEAULT Nicolas
+ * @license MPL-2.0
+ */
+
 import {mainLizmap, mainEventDispatcher} from '../modules/Globals.js';
 import {html, render} from 'lit-html';
 
+/**
+ * @class
+ * @name SelectionTool
+ * @augments HTMLElement
+ */
 export default class SelectionTool extends HTMLElement {
     constructor() {
         super();
@@ -30,7 +43,7 @@ export default class SelectionTool extends HTMLElement {
                         </optgroup>
                     </select>
                 </div>
-                <lizmap-digitizing></lizmap-digitizing>
+                <lizmap-digitizing import-export></lizmap-digitizing>
                 <div class="selectiontool-buffer">
                     <label><span>${lizDict['selectiontool.toolbar.buffer']}</span>
                         <div class="input-append">

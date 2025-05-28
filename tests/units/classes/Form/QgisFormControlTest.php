@@ -3,7 +3,7 @@
 use PHPUnit\Framework\TestCase;
 use Lizmap\Form\QgisFormControl;
 
-require_once __DIR__.'/../../../../lib/jelix/forms/jFormsBase.class.php';
+require_once __DIR__.'/../../../../lizmap/vendor/jelix/jelix/lib/jelix/forms/jFormsBase.class.php';
 
 /**
  * @internal
@@ -59,7 +59,7 @@ class QgisFormControlTest extends TestCase
             )
         );
         $control->ctrl->datatype = new \jDatatypeString();
-        $control->fieldDataType = 'float';
+        $control->fieldDataType = 'decimal';
         $control->isReadOnly = false;
         $control->required = true;
         $control->setControlMainPropertiesForTests($properties);
@@ -367,9 +367,9 @@ class QgisFormControlTest extends TestCase
         $this->assertEquals($control->fieldDataType, 'boolean');
         $this->assertEquals($control->fieldEditType, 'CheckBox');
         $this->assertEquals($control->ctrl->getWidgetType(), 'checkbox');
-        $this->assertEquals($control->ctrl->valueOnCheck, 'true');
+        $this->assertEquals($control->ctrl->valueOnCheck, 't');
         $this->assertEquals($control->ctrl->valueLabelOnCheck, 'Yes');
-        $this->assertEquals($control->ctrl->valueOnUncheck, 'false');
+        $this->assertEquals($control->ctrl->valueOnUncheck, 'f');
         $this->assertEquals($control->ctrl->valueLabelOnUncheck, 'No');
     }
 }

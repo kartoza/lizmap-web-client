@@ -2,6 +2,9 @@
 
 use Lizmap\Project;
 use PHPUnit\Framework\TestCase;
+use function PHPUnit\Framework\assertContains;
+use function PHPUnit\Framework\assertCount;
+use function PHPUnit\Framework\assertEquals;
 
 /**
  * @internal
@@ -156,6 +159,49 @@ class QgisProjectTest extends TestCase
         $testQgis = new qgisProjectForTests();
         $themes = $testQgis->readThemesForTests($xml);
         $this->assertEquals($expectedThemes, $themes);
+
+        $expectedThemes = array(
+          'theme2' => array(
+              'layers' => array(
+                 'sousquartiers_7c49d0fc_0ee0_4308_a66d_45c144e59872' => array(
+                    'style' => 'défaut',
+                    'expanded' => '1',
+                  ),
+                  'quartiers_ef5b13e3_36db_4e0d_98b3_990de580367d' => array(
+                      'style' => 'style2',
+                      'expanded' => '1',
+                  ),
+              ),
+              'expandedGroupNode' => array(
+                  'group1',
+              ),
+              'checkedGroupNode' => array(
+                  'group1',
+            ),
+          ),
+          'theme1' => array(
+              'layers' => array(
+                  'quartiers_ef5b13e3_36db_4e0d_98b3_990de580367d' => array(
+                      'style' => 'style1',
+                      'expanded' => '1',
+                  ),
+              ),
+              'expandedGroupNode' => array(
+                  'group1',
+              ),
+          ),
+      );
+      $file = __DIR__.'/Ressources/themes-3_22.qgs';
+      $xml = simplexml_load_file($file);
+      $testQgis = new qgisProjectForTests();
+      $themes = $testQgis->readThemesForTests($xml);
+      $this->assertEquals($expectedThemes, $themes);
+
+      $file = __DIR__.'/Ressources/themes-3_26.qgs';
+      $xml = simplexml_load_file($file);
+      $testQgis = new qgisProjectForTests();
+      $themes = $testQgis->readThemesForTests($xml);
+      $this->assertEquals($expectedThemes, $themes);
     }
 
     public function testReadCustomProjectVariables()
@@ -188,6 +234,28 @@ class QgisProjectTest extends TestCase
         }
     }
 
+    public function testReadQgisMetadataFromXml()
+    {
+        $testQgis = new qgisProjectForTests();
+        $xml = simplexml_load_file(__DIR__.'/Ressources/readLayers_316.qgs');
+        $this->assertEquals('31607', $testQgis->readQgisVersionForTests($xml));
+
+        $testQgis = new qgisProjectForTests();
+        $xml = simplexml_load_file(__DIR__.'/Ressources/readLayers_310.qgs');
+        $this->assertEquals('31004', $testQgis->readQgisVersionForTests($xml));
+    }
+
+    public function testReadQgisMetadataFromLines()
+    {
+        $testQgis = new qgisProjectForTests();
+        $xml_path = __DIR__.'/Ressources/readLayers_316.qgs';
+        $this->assertEquals('2021-06-14T11:50:51', $testQgis->readLastSaveDateTimeForTests($xml_path));
+
+        $testQgis = new qgisProjectForTests();
+        $xml_path = __DIR__.'/Ressources/readLayers_310.qgs';
+        $this->assertEquals('', $testQgis->readLastSaveDateTimeForTests($xml_path));
+    }
+
     public function testReadRelations()
     {
         $expectedRelations = array(
@@ -195,12 +263,20 @@ class QgisProjectTest extends TestCase
                 array('referencingLayer' => 'SousQuartiers20160121124316563',
                     'referencedField' => 'QUARTMNO',
                     'referencingField' => 'QUARTMNO',
+                    'previewField' => 'LIBQUART',
+                    'relationName' => 'Subdistricts by district',
+                    'relationId' => 'SousQuartiers20160121124316563_QUARTMNO_VilleMTP_MTP_Quartiers_2011_432620130116112610876_QUARTMNO',
+
                 ),
             ),
             'tramstop20150328114203878' => array(
                 array('referencingLayer' => 'jointure_tram_stop20150328114216806',
                     'referencedField' => 'osm_id',
                     'referencingField' => 'stop_id',
+                    'previewField' => 'unique_name',
+                    'relationName' => 'Tram stop -> pivot tram stop/tram line',
+                    'relationId' => 'jointure_tram_stop20150328114216806_stop_id_tramstop20150328114203878_osm_id',
+
                 ),
             ),
             'pivot' => array(),
@@ -237,6 +313,65 @@ class QgisProjectTest extends TestCase
         $this->assertEquals($expectedFields, $relationsFields);
     }
 
+    public function testEmbeddedRelation()
+    {
+         $file = __DIR__.'/Ressources/relations_project_embed.qgs';
+         $testQgis = new qgisProjectForTests();
+         $testQgis->setPath($file);
+         $testQgis->readXMLProjectTest($file);
+
+         //check layers
+         foreach ($testQgis->getLayers() as $layers){
+                  $this->assertEquals($layers["embedded"],1);
+                  $this->assertEquals($layers["projectPath"],'./relations_project.qgs');
+         }
+
+         //check relation on embedded project
+         $expectedRelationsOnEmbeddedLayers = array(
+                  'father_layer_79f5a996_39db_4a1f_b270_dfe21d3e44ff' => array(
+                      array('referencingLayer' => 'child_layer_8dec6d75_eeed_494b_b97f_5f2c7e16fd00',
+                          'referencedField' => 'ref_id',
+                          'referencingField' => 'father_id',
+                          'previewField'=>'fid',
+                          'relationName' => 'fk_father_child_relation',
+                          'relationId' => 'child_laye_father_id_father_lay_ref_id_1',
+
+                      ),
+                  ),
+                  'pivot' => array(),
+         );
+
+         $expectedFieldsOnEmbeddedLayers = array(
+                  array (
+                      'id' => 'child_laye_father_id_father_lay_ref_id_1',
+                      'layerName' => 'father_layer',
+                      'typeName' => 'father_layer',
+                      'propertyName' => 'ref_id,fid',
+                      'filterExpression' => '',
+                      'referencedField' => 'ref_id',
+                      'referencingField' => 'father_id',
+                      'previewField' => 'fid',
+                  )
+         );
+
+         $relations = $testQgis->getRelations();
+         $relationFields = $testQgis->getRelationsFields();
+         $this->assertEquals($expectedRelationsOnEmbeddedLayers, $relations);
+         $this->assertEquals($expectedFieldsOnEmbeddedLayers, $relationFields);
+
+         // check relations identity on main project
+         $file = __DIR__.'/Ressources/relations_project.qgs';
+         $testQgisParent = new qgisProjectForTests();
+         $testQgisParent->setPath($file);
+         $testQgisParent->readXMLProjectTest($file);
+
+         $parentRelations = $testQgisParent->getRelations();
+         $parentRelationFields = $testQgisParent->getRelationsFields();
+         $this->assertEquals($relations,$parentRelations);
+         $this->assertEquals($relationFields,$parentRelationFields);
+
+    }
+
     public function testCacheConstruct()
     {
         $cachedProperties = array('WMSInformation', 'canvasColor', 'allProj4',
@@ -256,16 +391,60 @@ class QgisProjectTest extends TestCase
     {
         $file = __DIR__.'/Ressources/simpleLayer.qgs.cfg';
         $json = json_decode(file_get_contents($file));
-        $expectedLayer = clone $json->layers;
+        $expectedLayer = unserialize(serialize($json->layers));
         $expectedLayer->montpellier_events->opacity = (float) 0.85;
+        $expectedLayer->local_raster_layer->opacity = (float) 0.6835;
         $cfg = new Project\ProjectConfig((object) array('layers' => $json->layers));
         $testProj = new qgisProjectForTests();
-        $testProj->setXml(simplexml_load_file(__DIR__.'/Ressources/opacity.qgs'));
+        $testProj->setXmlForTest(simplexml_load_file(__DIR__.'/Ressources/opacity.qgs'));
+        $layers = array(
+            array (
+                'id' => 'events_4c3b47b8_3939_4c8c_8e91_55bdb13a2101',
+                'name' => 'montpellier_events',
+            ),
+            array (
+                'id' => 'raster_78572dfa_41b3_42da_a9c6_933ead8bad8f',
+                'name' => 'local_raster_layer',
+            ),
+        );
+        $testProj->setLayers($layers);
         $testProj->setLayerOpacityForTest($cfg);
         $this->assertEquals($expectedLayer, $cfg->getLayers());
+
+        // embedded layers
+        $file = __DIR__.'/Ressources/opacity_embed.qgs';
+        $data = array(
+            'WMSInformation' => array(),
+            'layers' => array(),
+        );
+        $file = __DIR__.'/Ressources/opacity_embed.qgs';
+        $testProjE = new ProjectForTests();
+
+        $testQgis = new QgisProjectForTests($data);
+        $rep = new Project\Repository('key', array(), null, null, null);
+        $testQgis->setPath($file);
+        $testQgis->readXMLProjectTest($file);
+
+        $cfg = json_decode(file_get_contents($file.'.cfg'));
+        $config = new Project\ProjectConfig($cfg);
+
+        $testProjE->setCfg($config);
+        $testProjE->setQgis($testQgis);
+        $testProjE->setRepo($rep);
+        $testProjE->setKey('test');
+
+        $testQgis->setLayerOpacityForTest($config);
+
+        $emLayer = $testQgis->getLayer('_a5a62408_edf3_4c07_a266_0e8ae6642517', $testProjE);
+        $this->assertNotNull($emLayer);
+        $this->assertEquals($emLayer->getName(), 'Fabbricati');
+
+        $eLayerName = $emLayer->getName();
+        $this->assertNotNull($config->getLayer($eLayerName));
+        $this->assertEquals(0.4,$config->getLayer($eLayerName)->opacity);
     }
 
-    public function getLayerData()
+    public static function getLayerData()
     {
         $layers = array(
             'montpellier' => array(
@@ -307,7 +486,7 @@ class QgisProjectTest extends TestCase
         }
     }
 
-    public function getReadEditionLayersData()
+    public static function getReadEditionLayersData()
     {
         $intraELayer = '{
             "anno_point": {
@@ -342,9 +521,191 @@ class QgisProjectTest extends TestCase
         $file = __DIR__.'/Ressources/'.$fileName.'.qgs';
         $eLayers = json_decode(file_get_contents($file.'.cfg'))->editionLayers;
         $testProj = new qgisProjectForTests();
-        $testProj->setXml(simplexml_load_file($file));
+        $testProj->setXmlForTest(simplexml_load_file($file));
         $testProj->readEditionLayersForTest($eLayers);
         $this->assertEquals($expectedELayer, $eLayers);
+    }
+
+    public function testReadEditionFormsForEmbeddedLayers()
+    {
+        $file = __DIR__.'/Ressources/embed_child.qgs';
+        $data = array(
+            'WMSInformation' => array(),
+            'layers' => array(),
+        );
+        $file = __DIR__.'/Ressources/embed_child.qgs';
+        $testProj = new ProjectForTests();
+
+        $testQgis = new QgisProjectForTests($data);
+        $rep = new Project\Repository('key', array(), null, null, null);
+        $testQgis->setPath($file);
+        $testQgis->readXMLProjectTest($file);
+
+        $cfg = json_decode(file_get_contents($file.'.cfg'));
+        $config = new Project\ProjectConfig($cfg);
+
+        $testProj->setCfg($config);
+        $testProj->setQgis($testQgis);
+        $testProj->setRepo($rep);
+        $testProj->setKey('test');
+
+        $editonCfgLayers = '{
+            "edition_layer_embed_line": {
+                "layerId": "edition_layer_embed_line_e74301b9_95ae_4b72_81cc_71fafb80082f",
+                "snap_vertices": "False",
+                "snap_segments": "False",
+                "snap_intersections": "False",
+                "snap_vertices_tolerance": 10,
+                "snap_segments_tolerance": 10,
+                "snap_intersections_tolerance": 10,
+                "provider": "postgres",
+                "capabilities": {
+                    "createFeature": "True",
+                    "allow_without_geom": "False",
+                    "modifyAttribute": "True",
+                    "modifyGeometry": "True",
+                    "deleteFeature": "True"
+                },
+                "geometryType": "line",
+                "order": 0
+            },
+            "edition_layer_embed_point": {
+                "layerId": "edition_layer_embed_point_7794e305_0e9b_40d0_bf0b_2494790d4eb3",
+                "snap_vertices": "False",
+                "snap_segments": "False",
+                "snap_intersections": "False",
+                "snap_vertices_tolerance": 10,
+                "snap_segments_tolerance": 10,
+                "snap_intersections_tolerance": 10,
+                "provider": "postgres",
+                "capabilities": {
+                    "createFeature": "True",
+                    "allow_without_geom": "False",
+                    "modifyAttribute": "True",
+                    "modifyGeometry": "True",
+                    "deleteFeature": "True"
+                },
+                "geometryType": "point",
+                "order": 1
+            },
+            "edition_layer_embed_child": {
+                "layerId": "edition_layer_embed_child_d87f81cd_26d2_4c40_820d_676ba03ff6ab",
+                "snap_layers": [],
+                "snap_vertices": "False",
+                "snap_segments": "False",
+                "snap_intersections": "False",
+                "snap_vertices_tolerance": 10,
+                "snap_segments_tolerance": 10,
+                "snap_intersections_tolerance": 10,
+                "provider": "postgres",
+                "capabilities": {
+                    "createFeature": "True",
+                    "allow_without_geom": "False",
+                    "modifyAttribute": "True",
+                    "modifyGeometry": "False",
+                    "deleteFeature": "True"
+                },
+                "geometryType": "none",
+                "order": 2
+            }
+        }';
+        $eLayers = json_decode($editonCfgLayers);
+
+        $testQgis->readEditionFormsForTest($eLayers, $testProj);
+
+        // check layer edition_layer_embed_line
+        // drag n drop form
+        $formControlCache = $testProj->getCacheHandler()->getEditableLayerFormCache("edition_layer_embed_line_e74301b9_95ae_4b72_81cc_71fafb80082f");
+        $names = array('id','descr');
+        assertCount(2,$formControlCache);
+        foreach($formControlCache as $formControl) {
+            assertContains($formControl->getName(), $names);
+            switch($formControl->getName()){
+                case 'id':
+                    assertEquals($formControl->getFieldAlias(),'id');
+                    assertEquals($formControl->getMarkup(),'input');
+                    assertEquals($formControl->getFieldEditType(),'TextEdit');
+                    break;
+                case 'descr':
+                    assertEquals($formControl->getFieldAlias(),'Description');
+                    assertEquals($formControl->getMarkup(),'input');
+                    assertEquals($formControl->getFieldEditType(),'TextEdit');
+                    break;
+                default:
+                    break;
+            }
+        }
+        // check layer edition_layer_embed_point
+        // drag n drop form
+        $formControlCache = $testProj->getCacheHandler()->getEditableLayerFormCache("edition_layer_embed_point_7794e305_0e9b_40d0_bf0b_2494790d4eb3");
+        $names = array('id','id_ext_point','descr');
+        assertCount(3,$formControlCache);
+        foreach($formControlCache as $formControl) {
+            assertContains($formControl->getName(), $names);
+            switch($formControl->getName()){
+                case 'id':
+                    assertEquals($formControl->getFieldAlias(),'Id');
+                    assertEquals($formControl->getMarkup(),'input');
+                    assertEquals($formControl->getFieldEditType(),'TextEdit');
+                    break;
+                case 'id_ext_point':
+                    assertEquals($formControl->getFieldAlias(),'external_ref');
+                    assertEquals($formControl->getMarkup(),'menulist');
+                    assertEquals($formControl->getFieldEditType(),'ValueRelation');
+                    $attributesArray =     array (
+                        'AllowMulti' => false,
+                        'AllowNull' => true,
+                        'Description' => '',
+                        'FilterExpression' => '',
+                        'Key' => 'id',
+                        'Layer' => 'edition_layer_embed_child_d87f81cd_26d2_4c40_820d_676ba03ff6ab',
+                        'LayerName' => 'edition_layer_embed_child',
+                        'LayerProviderName' => 'postgres',
+                        'LayerSource' => 'service=\'lizmapdb\' sslmode=prefer key=\'id\' checkPrimaryKeyUnicity=\'1\' table="tests_projects"."edition_layer_embed_child"',
+                        'NofColumns' => 1,
+                        'OrderByValue' => false,
+                        'UseCompleter' => false,
+                        'Value' => 'descr',
+                        'filters' =>
+                        array (
+                        ),
+                        'chainFilters' => false,
+                    );
+                    assertEquals($formControl->getEditAttributes(),$attributesArray);
+                    break;
+                case 'descr':
+                    assertEquals($formControl->getFieldAlias(),'Point description');
+                    assertEquals($formControl->getMarkup(),'input');
+                    assertEquals($formControl->getFieldEditType(),'TextEdit');
+                    break;
+                default:
+                    break;
+            }
+        }
+        // check layer edition_layer_embed_child
+        // autogenerated form
+        $formControlCache = $testProj->getCacheHandler()->getEditableLayerFormCache("edition_layer_embed_child_d87f81cd_26d2_4c40_820d_676ba03ff6ab");
+        $names = array('id','descr');
+
+        assertCount(2,$formControlCache);
+        foreach($formControlCache as $formControl) {
+            assertContains($formControl->getName(), $names);
+            switch($formControl->getName()){
+                case 'id':
+                    assertEquals($formControl->getFieldAlias(),'');
+                    assertEquals($formControl->getMarkup(),'');
+                    assertEquals($formControl->getFieldEditType(),'');
+                    break;
+                case 'descr':
+                    assertEquals($formControl->getFieldAlias(),'');
+                    assertEquals($formControl->getMarkup(),'');
+                    assertEquals($formControl->getFieldEditType(),'');
+                    break;
+                default:
+                    break;
+            }
+        }
+
     }
 
     public function testReadAttributeLayer()
@@ -373,13 +734,13 @@ class QgisProjectTest extends TestCase
         $aLayer = json_decode(file_get_contents($file.'.cfg'))->attributeLayers;
         $xml = simplexml_load_string($table);
         $testProj = new qgisProjectForTests();
-        $testProj->setXml(simplexml_load_file($file));
+        $testProj->setXmlForTest(simplexml_load_file($file));
         $testProj->readAttributeLayersForTest($aLayer);
         $xml = json_decode(str_replace('@', '', json_encode($xml)));
         $this->assertEquals($xml, $aLayer->montpellier_events->attributetableconfig);
     }
 
-    public function getShortNamesData()
+    public static function getShortNamesData()
     {
         $dir = __DIR__.'/Ressources/Projs/';
 
@@ -407,14 +768,14 @@ class QgisProjectTest extends TestCase
             ),
         );
         $testProj = new qgisProjectForTests();
-        $testProj->setXml(simplexml_load_file($file));
+        $testProj->setXmlForTest(simplexml_load_file($file));
         $cfg = new Project\ProjectConfig((object) array('layers' => (object) $layers));
         $testProj->setShortNamesForTest($cfg);
         $layer = $cfg->getLayers();
         if ($sname) {
             $this->assertEquals($sname, $layer->{$lname}->shortname);
         } else {
-            $this->assertObjectNotHasAttribute('shortname', $layer->{$lname});
+            $this->assertFalse(property_exists($layer->{$lname}, 'shortname'));
         }
     }
 
@@ -654,7 +1015,7 @@ class QgisProjectTest extends TestCase
         $prop = $props['type'];
         $this->assertEquals($prop->getFieldEditType(), 'Classification');
 
-        // DateTime widget
+        // ExternalResource widget
         $xmlStr = '
         <maplayer>
           <fieldConfiguration>
@@ -809,7 +1170,7 @@ class QgisProjectTest extends TestCase
                     <Option value="form_edition_vr_list_934681e5_2397_4451_a9f4_37d292240173" type="QString" name="Layer"/>
                     <Option value="form_edition_vr_list" type="QString" name="LayerName"/>
                     <Option value="postgres" type="QString" name="LayerProviderName"/>
-                    <Option value="service=\'lizmapdb\' sslmode=disable key=\'id\' estimatedmetadata=true srid=4326 type=Polygon checkPrimaryKeyUnicity=\'0\' table=&quot;tests_projects&quot;.&quot;form_edition_vr_list&quot; (geom) sql=" type="QString" name="LayerSource"/>
+                    <Option value="service=\'lizmapdb\' sslmode=prefer key=\'id\' estimatedmetadata=true srid=4326 type=Polygon checkPrimaryKeyUnicity=\'0\' table=&quot;tests_projects&quot;.&quot;form_edition_vr_list&quot; (geom) sql=" type="QString" name="LayerSource"/>
                     <Option value="1" type="int" name="NofColumns"/>
                     <Option value="false" type="bool" name="OrderByValue"/>
                     <Option value="false" type="bool" name="UseCompleter"/>
@@ -833,6 +1194,77 @@ class QgisProjectTest extends TestCase
         $options = (object) $prop->getEditAttributes();
         $this->assertTrue(property_exists($options, 'FilterExpression'));
         $this->assertEquals($options->FilterExpression, 'intersects(@current_geometry , $geometry)');
+
+        // RelationReference widget
+        $xmlStr = '
+        <maplayer>
+          <fieldConfiguration>
+            <field configurationFlags="None" name="risque">
+              <editWidget type="RelationReference">
+                <config>
+                  <Option type="Map">
+                    <Option type="bool" value="false" name="AllowAddFeatures"/>
+                    <Option type="bool" value="true" name="AllowNULL"/>
+                    <Option type="bool" value="false" name="MapIdentification"/>
+                    <Option type="bool" value="false" name="OrderByValue"/>
+                    <Option type="bool" value="false" name="ReadOnly"/>
+                    <Option type="QString" value="service=lizmap sslmode=prefer key=\'fid\' checkPrimaryKeyUnicity=\'0\' table=&quot;lizmap_data&quot;.&quot;risque&quot;" name="ReferencedLayerDataSource"/>
+                    <Option type="QString" value="risque_66cb8d43_86b7_4583_9217_f7ead54463c3" name="ReferencedLayerId"/>
+                    <Option type="QString" value="risque" name="ReferencedLayerName"/>
+                    <Option type="QString" value="postgres" name="ReferencedLayerProviderKey"/>
+                    <Option type="QString" value="tab_demand_risque_risque_66c_risque" name="Relation"/>
+                    <Option type="bool" value="false" name="ShowForm"/>
+                    <Option type="bool" value="true" name="ShowOpenFormButton"/>
+                  </Option>
+                </config>
+              </editWidget>
+            </field>
+          </fieldConfiguration>
+        </maplayer>
+        ';
+        $xml = simplexml_load_string($xmlStr);
+
+        $props = $testProj->getFieldConfigurationForTest($xml);
+        $this->assertTrue(is_array($props));
+        $this->assertCount(1, $props);
+        $this->assertTrue(array_key_exists('risque', $props));
+
+        $prop = $props['risque'];
+        $this->assertEquals($prop->getFieldEditType(), 'RelationReference');
+
+        $options = (object) $prop->getEditAttributes();
+        $this->assertTrue(property_exists($options, 'AllowNULL'));
+        $this->assertTrue($options->AllowNULL);
+        $this->assertTrue(property_exists($options, 'MapIdentification'));
+        $this->assertFalse($options->MapIdentification);
+        $this->assertTrue(property_exists($options, 'OrderByValue'));
+        $this->assertFalse($options->OrderByValue);
+        $this->assertTrue(property_exists($options, 'ReadOnly'));
+        $this->assertFalse($options->ReadOnly);
+        $this->assertTrue(property_exists($options, 'ReferencedLayerId'));
+        $this->assertEquals($options->ReferencedLayerId, 'risque_66cb8d43_86b7_4583_9217_f7ead54463c3');
+        $this->assertTrue(property_exists($options, 'ReferencedLayerName'));
+        $this->assertEquals($options->ReferencedLayerName, 'risque');
+        $this->assertTrue(property_exists($options, 'Relation'));
+        $this->assertEquals($options->Relation, 'tab_demand_risque_risque_66c_risque');
+        $this->assertTrue(property_exists($options, 'filters'));
+        $this->assertTrue(is_array($options->filters));
+        $this->assertCount(0, $options->filters);
+        $this->assertTrue(property_exists($options, 'chainFilters'));
+        $this->assertFalse($options->chainFilters);
+
+        $relationReferenceData = $prop->getRelationReference();
+        $this->assertTrue(is_array($relationReferenceData));
+        $this->assertTrue($relationReferenceData['allowNull']);
+        $this->assertFalse($relationReferenceData['orderByValue']);
+        $this->assertEquals($relationReferenceData['relation'], 'tab_demand_risque_risque_66c_risque');
+        $this->assertFalse($relationReferenceData['mapIdentification']);
+        $this->assertTrue(is_array($relationReferenceData['filters']));
+        $this->assertCount(0, $relationReferenceData['filters']);
+        $this->assertEquals($relationReferenceData['filterExpression'], Null);
+        $this->assertFalse($relationReferenceData['chainFilters']);
+        $this->assertEquals($relationReferenceData['referencedLayerName'], 'risque');
+        $this->assertEquals($relationReferenceData['referencedLayerId'], 'risque_66cb8d43_86b7_4583_9217_f7ead54463c3');
 
         // Range widget
         $xmlStr = '
@@ -1459,6 +1891,38 @@ class QgisProjectTest extends TestCase
         $this->assertTrue(array_key_exists('tram_id', $props));
         $this->assertEquals($props['tram_id']->getMarkup(), 'checkboxes');
 
+        // RelationReference widget
+        $xmlStr = '
+        <maplayer>
+          <fieldConfiguration>
+            <field configurationFlags="None" name="risque">
+              <editWidget type="RelationReference">
+                <config>
+                  <Option type="Map">
+                    <Option type="bool" value="false" name="AllowAddFeatures"/>
+                    <Option type="bool" value="true" name="AllowNULL"/>
+                    <Option type="bool" value="false" name="MapIdentification"/>
+                    <Option type="bool" value="false" name="OrderByValue"/>
+                    <Option type="bool" value="false" name="ReadOnly"/>
+                    <Option type="QString" value="service=lizmap sslmode=prefer key=\'fid\' checkPrimaryKeyUnicity=\'0\' table=&quot;lizmap_data&quot;.&quot;risque&quot;" name="ReferencedLayerDataSource"/>
+                    <Option type="QString" value="risque_66cb8d43_86b7_4583_9217_f7ead54463c3" name="ReferencedLayerId"/>
+                    <Option type="QString" value="risque" name="ReferencedLayerName"/>
+                    <Option type="QString" value="postgres" name="ReferencedLayerProviderKey"/>
+                    <Option type="QString" value="tab_demand_risque_risque_66c_risque" name="Relation"/>
+                    <Option type="bool" value="false" name="ShowForm"/>
+                    <Option type="bool" value="true" name="ShowOpenFormButton"/>
+                  </Option>
+                </config>
+              </editWidget>
+            </field>
+          </fieldConfiguration>
+        </maplayer>
+        ';
+        $xml = simplexml_load_string($xmlStr);
+        $props = $testProj->getFieldConfigurationForTest($xml);
+        $this->assertTrue(array_key_exists('risque', $props));
+        $this->assertEquals($props['risque']->getMarkup(), 'menulist');
+
         // ValueMap widget
         $xmlStr = '
         <maplayer>
@@ -1698,7 +2162,35 @@ class QgisProjectTest extends TestCase
                 </config>
               </editWidget>
             </field>
-
+            <field name="remote_path" configurationFlags="None">
+            <editWidget type="ExternalResource">
+              <config>
+                <Option type="Map">
+                  <Option type="int" value="0" name="DocumentViewer"/>
+                  <Option type="int" value="0" name="DocumentViewerHeight"/>
+                  <Option type="int" value="0" name="DocumentViewerWidth"/>
+                  <Option type="bool" value="true" name="FileWidget"/>
+                  <Option type="bool" value="true" name="FileWidgetButton"/>
+                  <Option type="QString" value="" name="FileWidgetFilter"/>
+                  <Option type="Map" name="PropertyCollection">
+                    <Option type="QString" value="" name="name"/>
+                    <Option type="Map" name="properties">
+                      <Option type="Map" name="storageUrl">
+                        <Option type="bool" value="true" name="active"/>
+                        <Option type="QString" value="\'http://webdav/\'|| file_name(@selected_file_path)" name="expression"/>
+                        <Option type="int" value="3" name="type"/>
+                      </Option>
+                    </Option>
+                    <Option type="QString" value="collection" name="type"/>
+                  </Option>
+                  <Option type="int" value="0" name="RelativeStorage"/>
+                  <Option type="QString" value="yenntsb" name="StorageAuthConfigId"/>
+                  <Option type="int" value="0" name="StorageMode"/>
+                  <Option type="QString" value="WebDAV" name="StorageType"/>
+                </Option>
+              </config>
+            </editWidget>
+          </field>
           </fieldConfiguration>
         </maplayer>
         ';
@@ -1759,6 +2251,17 @@ class QgisProjectTest extends TestCase
         $this->assertEquals('.png, .jpg', $imageFile->getUploadAccept());
         $this->assertEquals(array('image/png', 'image/jpg', 'image/jpeg', 'image/pjpeg'), $imageFile->getMimeTypes());
         $this->assertTrue($imageFile->isImageUpload());
+
+        $this->assertTrue(array_key_exists('remote_path', $props));
+        $remotePath = $props['remote_path'];
+        $this->assertEquals('WebDAV',$remotePath->getEditAttribute("StorageType"));
+        $this->assertEquals("'http://webdav/'|| file_name(@selected_file_path)",$remotePath->getEditAttribute("webDAVStorageUrl"));
+        $this->assertEquals('upload', $remotePath->getMarkup());
+        $this->assertEquals('', $remotePath->getUploadCapture());
+        $this->assertEquals('', $remotePath->getUploadAccept());
+        $this->assertEquals(array(), $remotePath->getMimeTypes());
+        $this->assertFalse($remotePath->isImageUpload());
+
 
     }
 }

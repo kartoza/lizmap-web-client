@@ -13,10 +13,20 @@
 [modules]
 ;; uncomment it if you want to use ldap for authentication
 ;; see documentation to complete the ldap configuration
-;ldapdao.access=2
+;ldapdao.enable=on
 
 
 [coordplugin_auth]
 ;; uncomment it if you want to use ldap for authentication
 ;; see documentation to complete the ldap configuration
 ;driver=ldapdao
+
+
+[mailer]
+;; to send email via SMTP, uncomment this line, and fill the section smtp:mailer into profiles.ini.php
+;mailerType=smtp
+
+
+[auth_db]
+; uncomment to enable authentication with the login or the email
+;authenticateWith=login-email

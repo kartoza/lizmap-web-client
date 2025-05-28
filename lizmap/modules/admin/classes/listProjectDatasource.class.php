@@ -1,7 +1,5 @@
 <?php
 
-require_once JELIX_LIB_PATH.'forms/jFormsDatasource.class.php';
-
 class listProjectDatasource extends jFormsDynamicDatasource
 {
     protected $formId = 0;
@@ -28,7 +26,7 @@ class listProjectDatasource extends jFormsDynamicDatasource
         if ($criteria && array_key_exists($criteria, $this->data)) {
             $rep = lizmap::getRepository($criteria);
             // Get projects metadata
-            $metadata = $rep->getProjectsMetadata();
+            $metadata = $rep->getProjectsMainData();
             foreach ($metadata as $meta) {
                 if ($meta->getHidden()) {
                     continue;
@@ -49,13 +47,13 @@ class listProjectDatasource extends jFormsDynamicDatasource
                 if ($p) {
                     return (string) $p->getTitle();
                 }
-            } catch (UnknownLizmapProjectException $e) {
+            } catch (\Lizmap\Project\UnknownLizmapProjectException $e) {
                 jLog::logEx($e, 'error');
 
-                return null;
+                return '';
             }
         }
 
-        return null;
+        return '';
     }
 }

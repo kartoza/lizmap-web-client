@@ -7,29 +7,35 @@
 {foreach $mapitems as $mi}
 {if $mi->type == 'rep'}
 <h2 class="liz-repository-title">{$mi->title}</h2>
-<ul class="liz-repository-project-list">
+<ul id="liz-repository-{$mi->id}" class="liz-repository-project-list" data-lizmap-repository="{$mi->id}">
   {foreach $mi->childItems as $p}
   {assign $idm = $idm + 1}
   <li class="liz-repository-project-item">
     <a name="link-projet-{$idm}"></a>
     <div class="thumbnail">
-      <div class="liz-project">
-        <img width="250" height="250" src="{$p->img}" alt="project image" class="liz-project-img">
-        <p class="liz-project-desc" style="display:none;">
-          <b class="title">{$p->title}</b>
-          <br/>
-          <br/><b>{@default.project.abstract.label@}</b>&nbsp;: <span class="abstract">{$p->abstract|strip_tags|truncate:100}</span>
-          <br/>
-          <br/><b>{@default.project.keywordList.label@}</b>&nbsp;: <span class="keywordList">{$p->keywordList}</span>
-          <br/>
-          <br/><b>{@default.project.projection.label@}</b>&nbsp;: <span class="proj">{$p->proj}</span>
-          <br/><b>{@default.project.bbox.label@}</b>&nbsp;: <span class="bbox">{$p->bbox}</span>
-        </p>
+      <div id="liz-project-{$mi->id}-{$p->id}" class="liz-project"
+        data-lizmap-repository="{$mi->id}"
+        data-lizmap-project="{$p->id}"
+        data-lizmap-bbox="{$p->bbox}"
+        data-lizmap-proj="{$p->proj}">
+        <a class="liz-project-view" href="{$p->url}{if $hide_header}&h=0{/if}">
+          <img width="250" height="250" loading="lazy" src="{$p->img}" alt="project image" class="_liz-project-img">
+          <p class="liz-project-desc" >
+            <b class="title">{$p->title}</b>
+            <br/>
+            <br/><b>{@default.project.abstract.label@}</b>&nbsp;: <span class="abstract">{$p->abstract|strip_tags|truncate:100}</span>
+            <br/>
+            <br/><b>{@default.project.keywordList.label@}</b>&nbsp;: <span class="keywordList">{$p->keywordList}</span>
+            <br/>
+            <br/><b>{@default.project.projection.label@}</b>&nbsp;: <span class="proj">{$p->proj}</span>
+            <br/><b>{@default.project.bbox.label@}</b>&nbsp;: <span class="bbox">{$p->bbox}</span>
+          </p>
+        </a>
       </div>
       <h5 class="liz-project-title">{$p->title}</h5>
       <p>
         <a class="btn liz-project-view" href="{$p->url}{if $hide_header}&h=0{/if}">{@default.project.open.map@}</a>
-        <a class="btn liz-project-show-desc" href="#link-projet-{$idm}" onclick="$('#liz-project-modal-{$idm}').modal('show'); return false;">{@default.project.open.map.metadata@}</a>
+        <a class="btn liz-project-show-desc" href="#link-projet-{$idm}" data-lizmap-modal="{$idm}">{@default.project.open.map.metadata@}</a>
       </p>
     </div>
 

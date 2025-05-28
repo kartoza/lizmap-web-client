@@ -17,8 +17,6 @@
   #search-query{
     padding-left: 8px;
     padding-right: 8px;
-    -webkit-transition: all .5s;
-    -moz-transition: all .5s;
     transition: all .5s;
   }
 
@@ -61,6 +59,24 @@
     width: 40px;
   }
 
+  /* snap panel */
+  #edition-point-coord-form-group .control-group div.snap-panel-controls {
+    display:flex;
+    flex-direction: column;
+    margin: 10px;
+    text-align: left;
+  }
+  #edition-point-coord-form-group .control-group div.snap-layers-list {
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+  }
+
+  #edition-point-coord-form-group .control-group div.snap-layer {
+    text-align: left;
+    display: flex;
+  }
 }
 @media screen and (max-device-width: 640px){
   #attributeLayers-tabs > li > a {
@@ -75,9 +91,6 @@
 
 /* #### Retina screen (iphone4, samsung note, etc.) Portrait or Landscape #### */
 @media
-only screen and (-webkit-min-device-pixel-ratio: 2),
-only screen and (   min--moz-device-pixel-ratio: 2),
-only screen and (     -o-min-device-pixel-ratio: 2/1),
 only screen and (        min-device-pixel-ratio: 2),
 only screen and (                min-resolution: 192dpi),
 only screen and (                min-resolution: 2dppx),
@@ -91,6 +104,11 @@ only screen and (                   max-device-height : 640px) {
   #header {
     height : 30px;
   }
+    .jacl2-list.jacl2-list-sticky-heads thead,
+    .jacl2-list-user.jacl2-list-sticky-heads thead
+    {
+        top: 35px;
+    }
   #logo {
     height : 30px;
     margin: 0px 5px;
@@ -174,7 +192,7 @@ only screen and (                   max-device-height : 640px) {
   }
 }
 /* smartphones, touchscreens */
-@media (hover: none) and (pointer: coarse) {
+@media (pointer: coarse) {
   #navbar button.btn{
     height : 40px;
     width : 40px;
@@ -287,8 +305,7 @@ only screen and (                   max-device-height : 640px) {
 
   #docks-wrapper{
     left: -1px;
-    width: 80%;
-    padding-top: 45px;
+    width: 100%;
     box-sizing: border-box;
   }
 
@@ -412,8 +429,8 @@ only screen and (                   max-device-height : 640px) {
     background-image: url(images/glyphicons-halflings-white.png);
   }
 
-  #right-dock{
-    margin: 0;
+  #dock{
+    margin-top: 45px;
   }
 
   .digitizing .btn {
@@ -422,9 +439,17 @@ only screen and (                   max-device-height : 640px) {
     box-sizing: border-box;
     padding: 12px;
   }
+
+  lizmap-treeview .icon-info-sign {
+    display: block;
+  }
+
+  .tooltip-layer {
+    display: none;
+  }
 }
 
-@media (hover: none) and (pointer: coarse) and (orientation: portrait){
+@media (pointer: coarse) and (orientation: portrait){
   #docks-wrapper{
     flex-direction: column;
   }

@@ -6,7 +6,7 @@ use PHPUnit\Framework\TestCase;
  */
 class lizmapServicesTest extends TestCase
 {
-    public function getContactEmail()
+    public static function getContactEmail()
     {
         return array(
             array('', ''),
@@ -64,7 +64,7 @@ class lizmapServicesTest extends TestCase
         unset($testLizmapServices);
     }
 
-    public function getAllowUserAccountRequestsData()
+    public static function getAllowUserAccountRequestsData()
     {
         return array(
             array(false, '', true, false),
@@ -97,7 +97,7 @@ class lizmapServicesTest extends TestCase
         unset($testLizmapServices);
     }
 
-    public function getHideSensitivePropertiesData()
+    public static function getHideSensitivePropertiesData()
     {
         return array(
             array(true, true),
@@ -122,7 +122,7 @@ class lizmapServicesTest extends TestCase
         unset($testLizmapServices);
     }
 
-    public function getRootRepositoriesData()
+    public static function getRootRepositoriesData()
     {
         $path = realpath(__DIR__.'/../../../');
 
@@ -156,7 +156,7 @@ class lizmapServicesTest extends TestCase
         unset($testLizmapServices);
     }
 
-    public function getModifyGlobalData()
+    public static function getModifyGlobalData()
     {
         $testModify1 = array(
             'jcommunity' => array('registrationEnabled' => 'off'),
@@ -208,7 +208,7 @@ class lizmapServicesTest extends TestCase
         unset($testLizmapServices);
     }
 
-    public function getModifyLocalData()
+    public static function getModifyLocalData()
     {
         $testModify1 = array(
             'services' => array(
@@ -253,7 +253,7 @@ class lizmapServicesTest extends TestCase
      */
     public function testModifyLocal($localConfig, $newConfig, $changedProperty, $changedValue, $expectedReturnValue)
     {
-        $testLizmapServices = new LizmapServices($localConfig, null, false, '', null);
+        $testLizmapServices = new LizmapServices($localConfig, (object) array(), false, '', null);
         $this->assertEquals($expectedReturnValue, $testLizmapServices->modify($newConfig));
         if (isset($changedProperty)) {
             $this->assertEquals($changedValue, $testLizmapServices->{$changedProperty});
@@ -261,7 +261,7 @@ class lizmapServicesTest extends TestCase
         unset($testLizmapServices);
     }
 
-    public function getSaveIntoIniData()
+    public static function getSaveIntoIniData()
     {
         $ini1 = array(
             'appName' => 'Lizmap',
@@ -272,7 +272,9 @@ class lizmapServicesTest extends TestCase
             'appName' => 'Lizmap',
             'uploadedImageMaxWidthHeight' => 1920
         );
-        $ini2 = array();
+        $ini2 = array(
+            'webmasterName' => 'Adrien',
+        );
         $liveIni = array(
             'webmasterEmail' => 'test.test@test.com',
             'webmasterName' => 'Adrien',
@@ -312,7 +314,6 @@ class lizmapServicesTest extends TestCase
 
         $defaultPropList = array(
             'appName',
-            'qgisServerVersion',
             'wmsMaxWidth',
             'wmsMaxHeight',
             'relativeWMSPath',
@@ -322,7 +323,15 @@ class lizmapServicesTest extends TestCase
             'cacheRedisPort',
         );
 
-        $testLizmapServices = new LizmapServices(array('hideSensitiveServicesProperties' => $hide), (object) array(), false, '', null);
+        $testLizmapServices = new LizmapServices(
+            array('hideSensitiveServicesProperties' => $hide),
+            (object) array(
+                'lizmap' => [
+                    'setAdminContactEmailAsReplyTo' => false,
+                    'version' => 'unit-test-3'
+                ]
+            ),
+            false, '', null);
 
         foreach ($defaultPropList as $prop) {
             $testLizmapServices->{$prop} = '';
@@ -332,8 +341,8 @@ class lizmapServicesTest extends TestCase
             $testLizmapServices->{$key} = $val;
         }
 
-        $ini = new jIniFileModifier($iniPath);
-        $liveIni = new jIniFileModifier($liveIniPath);
+        $ini = new \Jelix\IniFile\IniModifier($iniPath);
+        $liveIni = new \Jelix\IniFile\IniModifier($liveIniPath);
         $testLizmapServices->saveIntoIni($ini, $liveIni);
         if (isset($expectedIniValues)) {
             $this->assertEquals($expectedIniValues, $ini->getValues($section_name));
@@ -346,7 +355,7 @@ class lizmapServicesTest extends TestCase
         unset($testLizmapServices);
     }
 
-    public function getRepoData()
+    public static function getRepoData()
     {
         $repo1 = array(
             'repository:test' => array(
@@ -415,7 +424,7 @@ class lizmapServicesTest extends TestCase
         unset($testLizmapServices, $repo);
     }
 
-    public function getMetricsEnabled()
+    public static function getMetricsEnabled()
     {
         return array(
             array(null, false),
@@ -437,8 +446,8 @@ class lizmapServicesTest extends TestCase
     public function testGetMetricsEnabled($testValue, $expectedValue)
     {
         $ini_tab = array('hideSensitiveServicesProperties' => '0',
-                         'services' => array(
-                             'appName' => 'Lizmap' ),
+            'services' => array(
+                'appName' => 'Lizmap', ),
         );
 
         if ($testValue !== null) {

@@ -12,7 +12,7 @@ class ProxyTest extends TestCase
         Request\Proxy::setAppContext($appContext);
     }
 
-    public function getBuildData()
+    public static function getBuildData()
     {
         $requestXmlWMS = '  <getcapabilities service="wms"></getcapabilities>';
         $requestXmlWFS = '  <getcapabilities service="wfs"></getcapabilities>';
@@ -50,7 +50,7 @@ class ProxyTest extends TestCase
         }
     }
 
-    public function getNormalizeParamsData()
+    public static function getNormalizeParamsData()
     {
         $paramsNormal = array(
             'service' => 'WMS',
@@ -82,7 +82,7 @@ class ProxyTest extends TestCase
             array($paramsBbox, $expectedBbox),
         );
     }
-    
+
     /**
      * @dataProvider getNormalizeParamsData
      */
@@ -92,7 +92,7 @@ class ProxyTest extends TestCase
         $this->assertEquals($expectedData, $data);
     }
 
-    public function getConstructUrlData()
+    public static function getConstructUrlData()
     {
         $paramsNormal = array(
             'service' => 'WMS',
@@ -125,7 +125,7 @@ class ProxyTest extends TestCase
         $this->assertEquals($expectedUrl, $result);
     }
 
-    public function getBuildOptionsData()
+    public static function getBuildOptionsData()
     {
         $optionsStr = 'proxyHttp';
         $options = array(
@@ -177,7 +177,7 @@ class ProxyTest extends TestCase
         $this->assertEquals($expectedResult, $result);
     }
 
-    public function getBuildHeadersData()
+    public static function getBuildHeadersData()
     {
         $options1 = array(
             'method' => 'get',
@@ -235,14 +235,18 @@ class ProxyTest extends TestCase
         $url = 'http://localhost?test=test';
         ProxyForTests::setServices((object)array('wmsServerURL' => 'http://localhost', 'wmsServerHeaders' => array()));
         list($url, $result) = ProxyForTests::buildHeadersForTests($url, $options);
-        $this->assertEquals($expectedHeaders, $result['headers']);
+        foreach ($expectedHeaders as $header => $value) {
+            $this->assertArrayHasKey($header, $result['headers']);
+            $this->assertEquals($value, $result['headers'][$header]);
+        }
+        $this->assertArrayHasKey('X-Request-Id', $result['headers']);
         $this->assertEquals($expectedBody, $result['body']);
         if ($expectedUrl) {
             $this->assertEquals($expectedUrl, $url);
         }
     }
 
-    public function getUserHttpHeadersData()
+    public static function getUserHttpHeadersData()
     {
         return array(
             array(false, null, null, '', ''),

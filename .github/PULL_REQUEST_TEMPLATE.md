@@ -1,7 +1,11 @@
-<!-- Add "fix" in front of "#" if it fixes the ticket or do nothing to only mention it.
+<!--
+Add the word "fix" in front of "#" if it fixes the ticket
+or do nothing to only mention it.
 
-This PR will be harvested on changelog.lizmap.com if there is a "changelog" label.
-Funded by NAME URL
+funded by NAME
+If funded by someone else than 3Liz, please add label "sponsored development"
 -->
-* Ticket : #
-* Funded by
+
+Ticket : #
+
+Funded by

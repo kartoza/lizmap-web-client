@@ -61,23 +61,14 @@ class datavizPlot
      *
      * @param string $repository
      * @param string $project
-     * @param string $layerId
-     * @param string $x_field
-     * @param string $y_field
-     * @param array  $colors
-     * @param array  $colorfields
-     * @param string $title
-     * @param null   $layout
-     * @param null   $aggregation
+     * @param array  $plotConfig
      * @param null   $data
-     * @param mixed  $plotConfig
      *
      * @throws jExceptionSelector
      */
     public function __construct(
         $repository,
         $project,
-        $layerId,
         $plotConfig,
         $data = null
     ) {
@@ -85,26 +76,26 @@ class datavizPlot
         // Get the project data
         $lproj = $this->getProject($repository, $project);
         if (!$lproj) {
-            return false;
+            return;
         }
         $this->lproj = $lproj;
 
         // Get main dataviz config
         $dv = new datavizConfig($repository, $project);
         $config = $dv->getConfig();
-        $this->theme = $config['dataviz']['theme'];
+        if ($config && array_key_exists('theme', $config)) {
+            $this->theme = $config['dataviz']['theme'];
+        }
 
         // Parse plot config
         $this->parsePlotConfig($plotConfig);
 
         // Get layer data
-        $this->parseLayer($layerId);
+        $this->parseLayer();
 
         // layout and data (use default if none given)
         $this->setLayout($this->layout);
         $this->setData($data);
-
-        return true;
     }
 
     private function parsePlotConfig($plotConfig)
@@ -141,7 +132,7 @@ class datavizPlot
             // Fields
             $str_x_fields = $plotConfig['plot']['x_field'];
             $exp_x_fields = explode(',', $str_x_fields);
-            if (count($exp_x_fields) > 0 and $exp_x_fields != array('')) {
+            if ($exp_x_fields != array('')) {
                 $x_fields = $exp_x_fields;
             }
             $str_y_fields = $plotConfig['plot']['y_field'];
@@ -149,7 +140,7 @@ class datavizPlot
                 $str_y_fields .= ','.$plotConfig['plot']['y2_field'];
             }
             $exp_y_fields = explode(',', $str_y_fields);
-            if (count($exp_y_fields) > 0 and $exp_y_fields != array('')) {
+            if ($exp_y_fields != array('')) {
                 $y_fields = $exp_y_fields;
             }
             $str_z_fields = '';
@@ -157,7 +148,7 @@ class datavizPlot
                 $str_z_fields = $plotConfig['plot']['z_field'];
             }
             $exp_z_fields = explode(',', $str_z_fields);
-            if (count($exp_z_fields) > 0 and $exp_z_fields != array('')) {
+            if ($exp_z_fields != array('')) {
                 $z_fields = $exp_z_fields;
             }
 
@@ -180,7 +171,7 @@ class datavizPlot
             }
         }
 
-        // Optionnal layout additionnal options (legacy code)
+        // Optional layout additional options (legacy code)
         if (array_key_exists('layout_config', $plotConfig['plot'])) {
             $this->layout = $plotConfig['plot']['layout_config'];
         }
@@ -213,9 +204,9 @@ class datavizPlot
      * @param string $repository
      * @param string $project
      *
-     * @throws jExceptionSelector
-     *
      * @return null|bool|Lizmap\Project\Project
+     *
+     * @throws jExceptionSelector
      */
     public function getProject($repository, $project)
     {
@@ -228,7 +219,7 @@ class datavizPlot
 
                 return false;
             }
-        } catch (UnknownLizmapProjectException $e) {
+        } catch (\Lizmap\Project\UnknownLizmapProjectException $e) {
             jMessage::add('The lizmap project '.strtoupper($project).' does not exist !', 'ProjectNotDefined');
 
             return false;
@@ -243,21 +234,32 @@ class datavizPlot
         return $lproj;
     }
 
-    protected function parseLayer($layerId)
+    /**
+     * Parse layer based on layer id provided by plotConfig.
+     */
+    protected function parseLayer()
     {
-        $layer = $this->lproj->getLayer($this->layerId);
-        //FIXME do not use this deprecated method and XML stuff here
+        // FIXME do not use this deprecated method and XML stuff here
         $layerXml = $this->lproj->getXmlLayer($this->layerId);
         if (count($layerXml) > 0) {
             $this->layerXmlZero = $layerXml[0];
         }
     }
 
+    /**
+     * Set the plot title from the plot config.
+     *
+     * @param string $title
+     */
     protected function setTitle($title)
     {
         $this->title = $title;
     }
 
+    /**
+     * @param null|array|string $layout
+     * @param string            $format the layout format: array or json
+     */
     protected function setLayout($layout = null, $format = 'array')
     {
         // First get layout template
@@ -278,8 +280,14 @@ class datavizPlot
         }
     }
 
+    /**
+     * @param string $field the field name
+     *
+     * @return string the field alias
+     */
     protected function getFieldAlias($field)
     {
+        /** @var qgisVectorLayer $layer */
         $layer = $this->lproj->getLayer($this->layerId);
         $aliases = $layer->getAliasFields();
         $name = $field;
@@ -290,10 +298,13 @@ class datavizPlot
         return $name;
     }
 
+    /**
+     * @return array
+     */
     protected function getLayoutTemplate()
     {
         $layout = array(
-            //'title' => $this->title,
+            // 'title' => $this->title,
             'showlegend' => $this->display_legend,
             'legend' => array(
                 'orientation' => 'h',
@@ -358,6 +369,10 @@ class datavizPlot
         return $layout;
     }
 
+    /**
+     * @param null|array|string $data
+     * @param string            $format the data format: array or json
+     */
     protected function setData($data = null, $format = 'json')
     {
         if (!empty($data)) {
@@ -376,6 +391,11 @@ class datavizPlot
         return null;
     }
 
+    /**
+     * @param string $format the data format: raw or json
+     *
+     * @return array|object
+     */
     public function getData($format = 'raw')
     {
         $data = $this->data;
@@ -387,6 +407,11 @@ class datavizPlot
         return $data;
     }
 
+    /**
+     * @param string $format the data format: raw or json
+     *
+     * @return array|object
+     */
     public function getLayout($format = 'raw')
     {
         $layout = $this->layout;
@@ -413,7 +438,10 @@ class datavizPlot
 
         // Prepare request and get data
         if ($method == 'wfs') {
-            $typename = str_replace(' ', '_', $layerName);
+            // Get WFS typename
+            /** @var qgisVectorLayer $layer */
+            $layer = $this->lproj->getLayer($this->layerId);
+            $typeName = $layer->getWfsTypeName();
             $propertyname = array();
             if (count($this->x_fields) > 0) {
                 $propertyname = array_merge($propertyname, $this->x_fields);
@@ -428,7 +456,7 @@ class datavizPlot
                 'SERVICE' => 'WFS',
                 'VERSION' => '1.0.0',
                 'REQUEST' => 'GetFeature',
-                'TYPENAME' => $typename,
+                'TYPENAME' => $typeName,
                 'OUTPUTFORMAT' => 'GeoJSON',
                 'GEOMETRYNAME' => 'none',
                 'PROPERTYNAME' => implode(',', $propertyname),
@@ -446,7 +474,7 @@ class datavizPlot
                 $matches = array();
                 $preg = preg_match_all('#"\b[^\s]+\b"#', $exp_filter, $matches);
                 $pp = '';
-                if (count($matches) > 0 and count($matches[0]) > 0) {
+                if ($preg != false && count($matches[0]) > 0) {
                     foreach ($matches[0] as $m) {
                         $pp .= ','.trim($m, '"');
                     }
@@ -460,25 +488,26 @@ class datavizPlot
             }
 
             $wfsrequest = new \Lizmap\Request\WFSRequest($this->lproj, $wfsparams, lizmap::getServices());
-            // FIXME no support of the case where $wfsresponse is the content of serviceException?
+
             $wfsresponse = $wfsrequest->process();
             $features = null;
 
-            // Check data
-            if (property_exists($wfsresponse, 'data')) {
-                $data = $wfsresponse->data;
-                if (property_exists($wfsresponse, 'file') and $wfsresponse->file and is_file($data)) {
-                    $data = jFile::read($data);
-                }
-                $featureData = json_decode($data);
-                if (empty($featureData)) {
-                    $featureData = null;
-                } else {
-                    if (empty($featureData->features)) {
-                        $featureData = null;
-                    }
-                }
+            // Check code
+            if (floor($wfsresponse->getCode() / 100) >= 4) {
+                return false;
             }
+            // Check mime/type
+            if (in_array(strtolower($wfsresponse->getMime()), array('text/html', 'text/xml'))) {
+                return false;
+            }
+
+            // decode features
+            $featureData = json_decode($wfsresponse->getBodyAsString());
+
+            if (empty($featureData) || empty($featureData->features)) {
+                $featureData = null;
+            }
+
             if (!$featureData) {
                 return false;
             }
@@ -563,17 +592,30 @@ class datavizPlot
                 $featcolors = array();
 
                 // Creation of array who will be used to aggregate when the type is pie or sunburst
+                $x_aggregate_sum = null;
+                $x_aggregate_count = null;
+                $x_aggregate_min = null;
+                $x_aggregate_max = null;
+                $x_aggregate_first = null;
+                $x_aggregate_stddev = null;
+                $x_aggregate_median = null;
+                $x_aggregate_last = null;
+                $x_distinct_parent = null;
                 if ($this->type == 'pie' or $this->type == 'sunburst' or $this->type == 'html') {
                     $x_aggregate_sum = array();
                     $x_aggregate_count = array();
                     $x_aggregate_min = array();
                     $x_aggregate_max = array();
+                    $x_aggregate_first = array();
                     $x_aggregate_stddev = array();
                     $x_aggregate_median = array();
+                    $x_aggregate_last = array();
                     $x_distinct_parent = array();
                 }
 
                 // Fill in the trace for each dimension
+                $parents_distinct_values = null;
+                $parents_distinct_colors = null;
                 if ($this->type == 'sunburst') {
                     $parents_distinct_values = array();
                     $parents_distinct_colors = array();
@@ -596,7 +638,7 @@ class datavizPlot
                         // Fill in feature colors
                         if (property_exists($feat->properties, $featcolor)
                             and !empty($feat->properties->{$featcolor})
-                            ) {
+                        ) {
                             $featcolors[] = $feat->properties->{$featcolor};
                         }
                     } else {
@@ -700,11 +742,11 @@ class datavizPlot
                         } elseif ($this->aggregation == 'stddev') {
                             $trace[$this->y_property_name][] = sqrt($x_aggregate_stddev[$key] / $x_aggregate_count[$key]);
                         } elseif ($this->aggregation == 'median') {
-                            //if count is even
+                            // if count is even
                             if ($x_aggregate_count[$key] % 2 == 0) {
                                 $trace[$this->y_property_name][] = $x_aggregate_median[$key][$x_aggregate_count[$key] / 2];
                             }
-                            //si count is odd
+                            // si count is odd
                             else {
                                 $mid = floor($x_aggregate_count[$key] / 2);
                                 $trace[$this->y_property_name][] = ($x_aggregate_median[$key][$mid] + $x_aggregate_median[$key][$mid + 1]) / 2;
@@ -761,17 +803,24 @@ class datavizPlot
 
                 // add aggregation property if aggregation is done client side via dataplotly
                 // Not available for pie, histogram and histogram2d, we have done it manually beforehand in php
+                // Careful : for horizontal bar plots, we need to reverse the groups and target values
                 if ($this->aggregation
                     and !in_array($this->type, array('pie', 'histogram', 'histogram2d', 'html', 'sunburst'))
                 ) {
+                    // Revert x and y for horizontal bar plot
+                    $transformGroupsName = $this->x_property_name;
+                    $transformTargetName = $this->y_property_name;
+                    if (array_key_exists('orientation', $trace) and $trace['orientation'] == 'h') {
+                        $transformGroupsName = $this->y_property_name;
+                        $transformTargetName = $this->x_property_name;
+                    }
                     $trace['transforms'] = array(
                         array(
                             'type' => 'aggregate',
-                            'groups' => $this->x_property_name,
-                            //'groups' => 'x',
+                            'groups' => $transformGroupsName,
                             'aggregations' => array(
                                 array(
-                                    'target' => $this->y_property_name,
+                                    'target' => $transformTargetName,
                                     'func' => $this->aggregation,
                                     'enabled' => true,
                                 ),
@@ -779,7 +828,6 @@ class datavizPlot
                         ),
                     );
                 }
-
                 $traces[] = $trace;
             }
 
@@ -849,9 +897,9 @@ class datavizPlotBox extends datavizPlot
             'x' => array(),
             'y' => array(),
             'text' => array(),
-            //'marker'=> array(
-            //'color' => 'orange'
-            //),
+            // 'marker'=> array(
+            // 'color' => 'orange'
+            // ),
             'boxmean' => null,
             'orientation' => 'v',
             'boxpoints' => false,
@@ -976,7 +1024,7 @@ class datavizPlotPie extends datavizPlot
             'hovertemplate' => '%{label}<br>%{value:.1f}<br>%{percent:,.0%}',
             'textinfo' => 'value',
             'texttemplate' => '%{value:.1f}',
-            //'textposition' => 'inside',
+            // 'textposition' => 'inside',
             'insidetextorientation' => 'horizontal',
             'opacity' => null,
             'hole' => '0.4',
@@ -1057,9 +1105,9 @@ class datavizPlotSunburst extends datavizPlot
             'labels' => array(),
             'parents' => array(),
             'branchvalues' => 'total',
-            //'hoverinfo' => "label+value",
+            // 'hoverinfo' => "label+value",
             'hovertemplate' => '%{label}<br>%{value:.1f}<br>%{percentEntry:,.0%}',
-            //'textinfo' => 'value',
+            // 'textinfo' => 'value',
             'texttemplate' => '%{value:.1f}',
             'opacity' => null,
         );

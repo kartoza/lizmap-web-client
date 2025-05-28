@@ -138,7 +138,7 @@ class lizmapProject
     }
 
     /**
-     * @param $layerId
+     * @param string $layerId
      *
      * @return SimpleXMLElement[]
      *
@@ -214,14 +214,6 @@ class lizmapProject
         return $this->proj->hasAtlasEnabled();
     }
 
-    /**
-     * @return mixed
-     */
-    public function getQgisServerPlugins()
-    {
-        return $this->proj->getQgisServerPlugins();
-    }
-
     public function hasTooltipLayers()
     {
         return $this->proj->hasTooltipLayers();
@@ -263,7 +255,7 @@ class lizmapProject
     }
 
     /**
-     * @param $layerId
+     * @param string $layerId
      *
      * @return null|object
      */
@@ -288,7 +280,7 @@ class lizmapProject
     /**
      * Get login filtered configs with the build expressions.
      *
-     * @param Array[string] $layers  : layers' name list
+     * @param array<string> $layers  : layers' name list
      * @param bool          $edition : get login filters for edition
      *
      * @return array the login filtered configs with build expressions
@@ -371,7 +363,7 @@ class lizmapProject
     }
 
     /**
-     * @return false|string the JSON object corresponding to the configuration
+     * @return object the updated JSON object corresponding to the configuration
      */
     public function getUpdatedConfig()
     {
@@ -379,7 +371,7 @@ class lizmapProject
     }
 
     /**
-     * @return object
+     * @return object the full JSON object corresponding to the configuration
      */
     public function getFullCfg()
     {
@@ -387,9 +379,9 @@ class lizmapProject
     }
 
     /**
-     * @throws jExceptionSelector
-     *
      * @return lizmapMapDockItem[]
+     *
+     * @throws jExceptionSelector
      */
     public function getDefaultDockable()
     {
@@ -397,10 +389,10 @@ class lizmapProject
     }
 
     /**
+     * @return lizmapMapDockItem[]
+     *
      * @throws jException
      * @throws jExceptionSelector
-     *
-     * @return lizmapMapDockItem[]
      */
     public function getDefaultMiniDockable()
     {
@@ -408,13 +400,33 @@ class lizmapProject
     }
 
     /**
-     * @throws jExceptionSelector
-     *
      * @return lizmapMapDockItem[]
+     *
+     * @throws jExceptionSelector
      */
     public function getDefaultBottomDockable()
     {
         return $this->proj->getDefaultBottomDockable();
+    }
+
+    /**
+     * Check if the project needs an update in the QGIS desktop plugin.
+     *
+     * @return bool true if the project needs an update
+     */
+    public function needsUpdateError()
+    {
+        return $this->proj->needsUpdateError();
+    }
+
+    /**
+     * Check if the project needs an update in the QGIS desktop plugin.
+     *
+     * @return bool true if the project needs an update
+     */
+    public function needsUpdateWarning()
+    {
+        return $this->proj->needsUpdateWarning();
     }
 
     /**
@@ -430,10 +442,5 @@ class lizmapProject
     public function checkAclByUser($login)
     {
         return $this->proj->checkAclByUser($login);
-    }
-
-    public function getSpatialiteExtension()
-    {
-        return $this->proj->getSpatialiteExtension();
     }
 }

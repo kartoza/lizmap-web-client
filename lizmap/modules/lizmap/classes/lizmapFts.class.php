@@ -7,11 +7,19 @@
  *
  * @license    All rights reserved
  */
+
+use Lizmap\Project\Project;
+
 class lizmapFts
 {
-    protected $sql;
-
-    protected function generateSql($project)
+    /**
+     * Generate the SQL for lizmap_search according to the given project.
+     *
+     * @param Project $project The QGIS project
+     *
+     * @return string The SQL query
+     */
+    protected static function generateSql($project)
     {
 
         // Build search query.
@@ -20,7 +28,7 @@ class lizmapFts
         $sql = "
         SELECT
         item_layer, item_label, concat('EPSG:', ST_SRID(geom)) AS item_epsg, ST_AsText(geom) AS item_wkt,
-        similarity(trim( $1 ), item_label) AS sim
+        similarity(trim( :term ), item_label) AS sim
         ";
 
         // FROM
@@ -39,7 +47,7 @@ class lizmapFts
         $sql .= "
         AND f_unaccent(item_label) ILIKE ALL (
             string_to_array(
-                '%' || regexp_replace( f_unaccent( trim( $1 ) ), '[^0-9a-zA-Z]+', '%,%', 'g') || '%',
+                '%' || regexp_replace( f_unaccent( trim( :term ) ), '[^0-9a-zA-Z]+', '%,%', 'g') || '%',
                 ',',
                 ' '
             )
@@ -49,7 +57,7 @@ class lizmapFts
         // Add filter by projects
         $sql .= "
         AND (
-            item_project IS NULL OR $2 = ANY ( string_to_array(item_project, ',', ' ') )
+            item_project IS NULL OR :proj = ANY ( string_to_array(item_project, ',', ' ') )
         )
         ";
 
@@ -71,74 +79,57 @@ class lizmapFts
         }
         $sql .= ' )';
         $sql .= '
-        ORDER BY sim DESC
-        LIMIT $3;
+        ORDER BY sim DESC, item_label
+        LIMIT :lim;
         ';
-        $this->sql = $sql;
-    }
 
-    protected function getSql($project)
-    {
-        $this->generateSql($project);
-
-        return $this->sql;
+        return $sql;
     }
 
     /**
-     * Get data from database and return an array.
+     * Method called by the autocomplete input field for place search.
      *
-     * @param $sql Query to run
-     * @param $profile Name of the DB profile
-     * @param mixed $filterParams
+     * @param Project $project
+     * @param string  $term    Searched term
+     * @param bool    $debug   If the debug mode is ON
+     * @param int     $limit   default 40
      *
-     * @return Result as an array
+     * @return List of matching places
      */
-    protected function query($sql, $filterParams, $profile = null)
+    public static function getData($project, $term, $debug, $limit = 40)
     {
-        if (!$profile) {
-            $profile = 'search';
-        }
-
-        try {
-            // try to get the specific search profile to do not rebuild it
-            jProfiles::get('jdb', $profile, true);
-        } catch (Exception $e) {
-            // else use default
-            $profile = null;
-        }
-
-        try {
-            $cnx = jDb::getConnection($profile);
-            $resultset = $cnx->prepare($sql);
-            $resultset->execute($filterParams);
-            $result = $resultset->fetchAll();
-        } catch (Exception $e) {
-            $result = array();
-        }
-
-        return $result;
-    }
-
-    /**
-     * Method called by the autocomplete input field for taxon search.
-     *
-     * @param $term Searched term
-     * @param mixed $project
-     * @param mixed $limit
-     *
-     * @return List of matching taxons
-     */
-    public function getData($project, $term, $limit = 40)
-    {
-        $sql = $this->getSql($project);
+        $sql = lizmapFts::generateSql($project);
         $data = array();
 
         try {
             // Format words into {foo,bar}
-            $result = $this->query(
-                $sql,
-                array(trim($term), $project, $limit)
+            $params = array(
+                'term' => trim($term),
+                'proj' => $project->getKey(),
+                'lim' => $limit,
             );
+            if ($debug) {
+                jLog::log(
+                    'Debug Lizmap search, SQL query : '.$sql.' with parameters → '.json_encode($params),
+                    'lizmapadmin'
+                );
+            }
+
+            $profile = 'search';
+
+            try {
+                // try to get the specific search profile to do not rebuild it
+                jProfiles::get('jdb', $profile, true);
+            } catch (Exception $e) {
+                // else use default
+                $profile = null;
+            }
+
+            $cnx = jDb::getConnection($profile);
+            $resultSet = $cnx->prepare($sql);
+            $resultSet->execute($params);
+
+            $result = $resultSet->fetchAll();
 
             // Limitations
             $limit_tot = 60;
@@ -178,6 +169,11 @@ class lizmapFts
             }
         } catch (Exception $e) {
             $data = array();
+            jLog::log(
+                'An error has been raised when executing lizmap_search on "'.$project->getKey().'":'.$e->getMessage(),
+                'lizmapadmin'
+            );
+            jLog::logEx($e, 'error');
         }
 
         return $data;

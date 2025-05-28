@@ -3,8 +3,36 @@ body {
   padding-left:0;
   padding-right:0;
 }
+
+.flex {
+  display: flex;
+}
+
+.flex-grow-1 {
+  flex-grow: 1;
+}
+
+.form-row {
+  display: flex;
+}
+
+.form-row label {
+  width: 20%;
+  flex: 0 0 auto;
+}
+
+.form-row label + * {
+  width: 80%;
+}
+
 #title {
   margin-top : 5px;
+}
+p.error-msg{
+  font-size: 1.5em;
+  margin-top: 10px;
+  text-align: center;
+  line-height: 1.5em;
 }
 [class^="icon-"], [class*=" icon-"] {
   background-image: url('images/glyphicons-halflings.png');
@@ -68,10 +96,6 @@ button.btn-primary:hover > [class*=" icon-"] {
 }
 #headermenu .navbar-search .icon span {
   display:none;
-}
-
-#headermenu .dropdown-menu > li > a{
-  color:white;
 }
 
 /* mapmenu */
@@ -231,10 +255,6 @@ CSS Sprite positions calculated via http://instantsprite.com/ using 20px images 
   background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' stroke-width='2' stroke='%23000' fill='none' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24' id='pencil'><path d='M0 0h24v24H0z' stroke='none'></path><path d='M4 20h4L18.5 9.5a1.5 1.5 0 00-4-4L4 16v4M13.5 6.5l4 4'></path></svg>");
 }
 
-#content.mobile #mapmenu li.tooltip-layer {
-  display:none;
-}
-
 /* navbar */
 .navbar-fixed-top .navbar-inner,
 .navbar-static-top .navbar-inner {
@@ -299,6 +319,12 @@ CSS Sprite positions calculated via http://instantsprite.com/ using 20px images 
   background-position: -300px 0px;
 }
 
+/* Map menu tooltip */
+#content > div.tooltip {
+  /* display over #dock */
+  z-index:1050;
+}
+
 /* Dock */
 #dock {
   position: relative;
@@ -327,7 +353,6 @@ CSS Sprite positions calculated via http://instantsprite.com/ using 20px images 
 */
   right:50%;
   max-width:50%;
-  background:url('img/header-background-medium.jpg');
 }
 #dock.full {
 /*
@@ -335,7 +360,6 @@ CSS Sprite positions calculated via http://instantsprite.com/ using 20px images 
 */
   right:0px;
   max-width:100%;
-  background:url('img/header-background-medium.jpg');
 }
 
 #map-content.half, #map-content.full{
@@ -353,9 +377,13 @@ ul.nav.nav-tabs {
   right:5px;
   width: 32px;
   height: 32px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' class='bi bi-arrow-left-square' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M15 2a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2zM0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm11.5 5.5a.5.5 0 0 1 0 1H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='black' class='bi bi-arrow-left-square' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M15 2a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2zM0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm11.5 5.5a.5.5 0 0 1 0 1H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: center;
+}
+
+#dock-close:hover {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' class='bi bi-arrow-left-square' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M15 2a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2zM0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm11.5 5.5a.5.5 0 0 1 0 1H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5z'/%3E%3C/svg%3E");
 }
 
 #right-dock div.tabbable {
@@ -455,13 +483,11 @@ SubDock
   right:60px;
   top:10px;
   max-width:30%;
-  max-height:50%;
   z-index:1010;
-  overflow:auto;
   background-color:#4A4A4A !important;
   background-color:rgba(0,0,0,0.7) !important;
-
 }
+
 #content.mobile #mini-dock{
   max-width:100%;
   top:auto;
@@ -470,6 +496,10 @@ SubDock
   left:30px;
 }
 
+#mini-dock div.menu-content{
+  overflow: auto;
+  max-height: 45vh;
+}
 
 #mini-dock-tabs {
   display:none;
@@ -495,14 +525,21 @@ SubDock
 
 #bottom-dock-window-buttons {
   display:none;
-  position:absolute;
+  position:fixed;
   bottom:0px;
   padding:2px;
 }
+
 #bottom-dock.visible #bottom-dock-window-buttons {
   display:block;
 }
-
+#bottom-dock.half-transparent {
+  opacity: 1;
+  height: 48%;
+}
+#bottom-dock.half-transparent #bottom-dock-window-buttons {
+  display: block;
+}
 
 #bottom-dock-tabs {
   display:none;
@@ -511,7 +548,6 @@ SubDock
 #bottom-dock.visible {
   height: 48%;
 }
-
 #bottom-dock:hover {
   opacity: 1;
 }
@@ -768,9 +804,9 @@ table.attribute-table-table tr.active:hover td:last-child{
     border-right:2px solid darkgrey;
 }
 
-table.attribute-table-table tr.selected td,
-table.attribute-table-table tr.selected.active td{
-  background-color: yellow !important;
+table.attribute-table-table>tbody>tr.selected>*{
+  box-shadow: inset 0 0 0 9999px yellow !important;
+  color: black !important;
 }
 
 button.attribute-layer-feature-select{
@@ -982,11 +1018,8 @@ div.modal div.control-group {
 div.modal .form-horizontal .control-label {
   width: 90px;
   -webkit-hyphens: auto;
-  -moz-hyphens: auto;
-  -ms-hyphens: auto;
   hyphens: auto;
 }
-
 
 #dock .form-horizontal .jforms-choice .control-label,
 div.modal .form-horizontal .jforms-choice .control-label {
@@ -1272,29 +1305,13 @@ transform: none !important;
 #right-dock .title .btn.btn-stop:hover {
   background-position : -20px -20px;
 }
-/*
-#toolbar .menu-content .btn.btn-print-launch .icon{
-  display:inline-block;
-  vertical-align:middle;
-  background : url(images/sprite_menu_tools.png) no-repeat right;
-  background-position : -20px -80px;
-  width : 20px;
-  height : 20px;
-}
-#toolbar .menu-content .btn.btn-print-launch:hover .icon{
-  background-position : 0px -80px;
-}
-*/
 #toolbar .menu-content .btn.btn-success,
 #dock .menu-content .btn.btn-success,
 #sub-dock .menu-content .btn.btn-success,
 #mini-dock .menu-content .btn.btn-success,
 #right-dock .menu-content .btn.btn-success{
   background-color: #93C01F;
-  background-image: -webkit-linear-gradient(top, #9BC144, #93C01F);
-  background-image:    -moz-linear-gradient(top, #9BC144, #93C01F);
-  background-image:      -o-linear-gradient(top, #9BC144, #93C01F);
-  background-image:         linear-gradient(to bottom, #9BC144, #93C01F);
+  background-image:linear-gradient(to bottom, #9BC144, #93C01F);
 }
 #dock .print .menu-content,
 #mini-dock .print .menu-content,
@@ -1319,9 +1336,38 @@ transform: none !important;
 
 #print-template{max-width: 125px;}
 
+#print-parameters {
+  margin-bottom: 10px;
+}
+
 #print-parameters td, #print-parameters td select{
   padding-left: 1px;
   padding-right: 1px;
+}
+
+lizmap-print .print-advanced {
+  padding-bottom: 10px;
+}
+
+lizmap-print .print-advanced summary {
+  margin-bottom: 5px;
+  cursor: pointer;
+}
+
+lizmap-print .print-dpi{
+  margin-bottom: 10px;
+}
+
+lizmap-print .print-rotation span {
+  display: block;
+}
+
+lizmap-print .print-rotation .add-on {
+  font-weight: bold;
+}
+
+lizmap-print .flex {
+  gap: 10px;
 }
 
 #baselayer-menu div.baselayer-select,
@@ -1461,12 +1507,9 @@ transform: none !important;
   flex-direction: column;
 }
 
-#switcher-layers {
-  padding-left: 19px;
-}
-
 #switcher-layers-actions {
   background-color: inherit;
+  margin-top: 5px;
   margin-bottom: 1px;
   padding-right: 10px;
   text-align: right;
@@ -1502,194 +1545,9 @@ transform: none !important;
   background-color:#F0F0F0;
   overflow: hidden auto;
 }
-#switcher-layers ul {
-  margin-left:10px;
-}
-#switcher-layers li {
-  display:block;
-}
-#switcher-layers input[type="checkbox"] {
-  display:none;
-}
-#switcher-layers label {
-  display: inline-block;
-  width:16px;
-  height:16px;
-  min-width:16px;
-  min-height:16px;
-  padding-left:0;
-  background: none;
-  background-image : url("images/sprite_menu.png");
-}
-#switcher-layers input ~ label {
-  background-position : -32px -64px;
-}
-#switcher-layers input ~ ul {
-  display: none;
-}
-#switcher-layers input:checked ~ label {
-  background-position : -16px -48px;
-}
-#switcher-layers input:checked ~ ul {
-  display: block;
-}
-#switcher table {
-  width : 100%;
-}
-#switcher tr.disabled span {
-  /*jquery-ui update*/
-  color:#AAA;
-}
-#switcher tr.disabled button.ui-button-disabled {
-  cursor: default !important;
-  opacity:0.35;
-}
-#switcher tr.liz-layer.disabled a.expander {
-  display:none;
-}
-#switcher button.btn,
-#tmLayers button.btn,
-#dock .tree button.checkbox,
-#right-dock .tree button.checkbox,
-#bottom-dock .tree button.checkbox,
-#mini-dock .tree button.checkbox
-{
-  width:18px;
-  height:18px;
-  background: none;
-  min-width:18px;
-  min-height:18px;
-  padding:0;
-  background-image : url("images/sprite_menu.png");
-  background-position : -16px -94px;
-  transition: none;
-}
-#switcher button.btn.active,
-#tmLayers button.btn.active{
-  background-color : #0094D6;
-}
-#dock .tree button.checkbox,
-#right-dock .tree button.checkbox,
-#switcher .tree button.checkbox,
-#dock .tree button.checkbox,
-#right-dock .tree button.checkbox,
-#bottom-dock .tree button.checkbox,
-#mini-dock .tree button.checkbox
-{
-  border: 1px solid #0094D6;
-}
 
-#switcher .tree button.checkbox.checked,
-#dock .tree button.checkbox.checked,
-#right-dock .tree button.checkbox.checked,
-#bottom-dock .tree button.checkbox.checked,
-#mini-dock .tree button.checkbox.checked,
-#tmLayers .tree button.checkbox.checked
-{
-  background-color : #0094D6;
-  background-position : -48px -80px;
-}
-#switcher .tree button.checkbox.disabled,
-#dock .tree button.checkbox.disabled,
-#right-dock .tree button.checkbox.disabled,
-#bottom-dock .tree button.checkbox.disabled,
-#mini-dock .tree button.checkbox.disabled,
-#tmLayers .tree button.checkbox.disabled {
-  background-color : #B3B3B3;
-  border: 1px solid #B3B3B3;
-}
-#switcher .tree button.checkbox.partial.checked{
-  background-position: -32px -80px;
-}
-#switcher .tree tr.liz-layer.mutually-exclusive button.checkbox {
-  border-radius: 9px;
-}
-#switcher button.link{
-  float:right;
-  border: none;
-  background-position: 0px -80px;
-}
-#switcher button.removeCache{
-  float:right;
-  border: none;
-  background-position: -48px -100px;
-}
-
-#switcher span.label{
-  padding-left: 0.5em;
-  color : rgb(51,51,51);
-  background: none;
-  text-shadow : none;
-  cursor : pointer;
-}
-#switcher tr.liz-hidden{
-  display:none;
-}
-#switcher div.legendGraphics{
-  overflow:auto;
-  margin:0px;
-  width:100%;
-  max-width:250px;
-/*  background:white;*/
-}
-#switcher div.legendGraphics img{
-  position: relative;
-  max-width: none;
-}
-#switcher .treeTable td a.expander {
-  font-size : 1em;
-}
 .label, .badge {
   display:inline;
-}
-
-#switcher .treeTable tr.expanded td a.expander {
-  background-image : url("images/sprite_menu.png");
-  background-position : -16px -48px;
-}
-#switcher .treeTable tr.collapsed td a.expander {
-  background-image : url("images/sprite_menu.png");
-  background-position : -32px -64px;
-}
-#switcher .treeTable span.selected {
-  background-color : rgb(153,153,153);
-  text-shadow : 0px -1px 0px rgba(0,0,0,0.25);
-  color : white;
-}
-#switcher .treeTable td.loading{
-  width: 10px;
-}
-#switcher .treeTable span.loading {
-  /*jquery-ui update*/
-  display: none;
-  line-height: 10px;
-  vertical-align: sub;
-  width: 10px;
-  height: 10px;
-  background-image : url("images/download_layer.gif");
-}
-#switcher .treeTable tr.disabled span.loading {
-  display:none;
-}
-#switcher .treeTable span.loading.loadstart {
-  display:inline-block;
-}
-#switcher span.label {
-  white-space:normal;
-}
-
-#switcher .treeTable tr.liz-layer td span.label {
-    font-weight: normal;
-}
-
-#switcher .treeTable tr {
-  border: 1px solid transparent;
-  border-bottom: 0px;
-}
-
-#switcher .treeTable tr.selected, #switcher .treeTable tr.accept {
-  border: 1px solid #0094D6;
-  background-color:inherit;
 }
 
 #switcher-baselayer .menu-content  {
@@ -1800,12 +1658,33 @@ a.btn.btn-opacity-layer.active {
   background-position : -44px -120px;
 }
 
+lizmap-navbar {
+  display: flex;
+  flex-direction: column;
+}
+
+.ol-zoomslider {
+  position: initial;
+  height: 50px;
+}
+
+.ol-zoomslider button{
+  width: 30px;
+  height: 4px;
+  right: 15px;
+  background: var(--color-dark-gray-elements);
+}
+
 #zoom-in-max-msg {
   position: absolute;
   right: 40px;
   top: 110px;
   white-space: nowrap;
   padding: 4px;
+}
+
+.ol-dragzoom{
+  border: solid 2px rgba(255, 0, 0, 0.5);
 }
 
 /*Loading window*/
@@ -1891,11 +1770,11 @@ lizmap-mouse-position > div.mouse-position input[type="number"]{
 }
 lizmap-mouse-position input[type="number"]::-webkit-outer-spin-button,
 lizmap-mouse-position input[type="number"]::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
+  display: none;
+  margin: 0;
 }
 lizmap-mouse-position input[type="number"] {
-    -moz-appearance: textfield;
+    appearance: textfield;
 }
 lizmap-mouse-position > div.mouse-position > button{
   height: 30px;
@@ -1918,15 +1797,14 @@ lizmap-mouse-position > div.coords-unit > select{
   z-index : 1000;
   background-color : white;
   background-color : rgba(255,255,255,0.7);
-  -webkit-border-top-left-radius: 1em;
-  -moz-border-top-left-radius: 1em;
   border-top-left-radius: 1em;
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
 }
-#attribution {
-  font-size: 0.75em;
-  line-height: 10px;
-  vertical-align : text-bottom;
-  margin-right : 0.5em;
+#attribution-ol .ol-attribution {
+  position: unset;
+  max-width: none;
 }
 .olLayerGooglePoweredBy.olLayerGoogleV3.gmnoprint {
   display:none;
@@ -1960,11 +1838,21 @@ lizmap-mouse-position > div.coords-unit > select{
   width:50px;
 }
 
-
-#tooltip-layer select.loading {
-    background-image: url("images/download_layer.gif");
-    background-repeat: no-repeat;
-    background-position: 90% center;
+#tooltip {
+  position: absolute;
+  display: inline-block;
+  height: auto;
+  width: auto;
+  z-index: 100;
+  background-color: #333;
+  color: #fff;
+  border-radius: 4px;
+  padding: 5px;
+  left: 50%;
+  transform: translateX(3%);
+  visibility: hidden;
+  pointer-events: none;
+  z-index: 750;
 }
 
 #message {
@@ -2007,6 +1895,13 @@ lizmap-mouse-position > div.coords-unit > select{
   opacity : 0.8
 }
 
+.alert-info ul li.jelix-msg-item-warning {
+    color:#ff9100;
+}
+
+.alert-info ul li.jelix-msg-item-error {
+    color:#DA4F49;
+}
 /**
  * LizMap icons
  */
@@ -2033,11 +1928,7 @@ lizmap-mouse-position > div.coords-unit > select{
   font-family: century gothic,arial,sans serif;
 }
 
-/*Popup OpenLayers*/
-#liz_layer_popup {
-  z-index:2000;
-}
-
+/* Popup OpenLayers */
 .lizmapPopup.olPopup,
 #map-content .lizmapPopup{
   background-color:#4A4A4A !important;
@@ -2083,21 +1974,24 @@ lizmap-mouse-position > div.coords-unit > select{
 #map-content .lizmapPopupContent h4,
 #popupcontent .lizmapPopupContent h4{
   margin: 0px;
-  color : white !important;
+  color : white;
   font-size: 1em;
   padding: 2px;
   padding-left: 5px;
-  border-bottom: 1px solid white;
-  border-bottom: 1px solid rgba(255,255,255,0.4);
+  border-bottom: 1px solid var(--color-contrasted-elements-light);
 }
-
 
 .lizmapPopup.olPopup .lizmapPopupDiv,
 #map-content .lizmapPopupDiv{
   margin: 10px !important;
   margin-bottom: 20px !important;
-  background-color:#F0F0F0 !important;
 }
+
+#liz_layer_popup_contentDiv {
+  max-height: 30vh;
+  overflow: auto;
+}
+
 #popupcontent .lizmapPopupDiv{
   margin: 10px !important;
   margin-bottom: 20px !important;
@@ -2189,14 +2083,67 @@ lizmap-mouse-position > div.coords-unit > select{
   margin-top: 5px;
 }
 
-.lizmapPopupChildren .compact-tables, .lizmapPopupChildren .explode-tables{
+.lizmapPopupChildren .compact-tables,
+.lizmapPopupChildren .explode-tables{
   margin-top: 3px;
   margin-left: 10px;
+}
+
+/* Don't display buttons when there is no table (when there is only one feature) */
+.lizmapPopupChildren .compact-tables:not(:has(~ .popupAllFeaturesCompact)),
+.lizmapPopupChildren .explode-tables:not(:has(~ .popupAllFeaturesCompact)){
+  display: none;
 }
 
 #popupcontent .popupAllFeaturesCompact .lizmapPopupTable td{
   word-break: normal;
 }
+
+/* Map's popup OL8 */
+
+.ol-popup {
+  position: absolute;
+  background-color: white;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  padding: 5px;
+  border-radius: 10px;
+  border: 1px solid #cccccc;
+  bottom: 12px;
+  left: -50px;
+  min-width: 280px;
+}
+.ol-popup:after, .ol-popup:before {
+  top: 100%;
+  border: solid transparent;
+  content: " ";
+  height: 0;
+  width: 0;
+  position: absolute;
+  pointer-events: none;
+}
+.ol-popup:after {
+  border-top-color: white;
+  border-width: 10px;
+  left: 48px;
+  margin-left: -10px;
+}
+.ol-popup:before {
+  border-top-color: #cccccc;
+  border-width: 11px;
+  left: 48px;
+  margin-left: -11px;
+}
+.ol-popup-closer {
+  text-decoration: none;
+  position: absolute;
+  top: 2px;
+  right: 8px;
+}
+.ol-popup-closer:after {
+  content: "✖";
+}
+
+/* Tooltip */
 
 #tooltipPopupContent {
   background-color:#F0F0F0 !important;
@@ -2269,9 +2216,9 @@ lizmap-mouse-position > div.coords-unit > select{
 
 #edition-form-container h3 {
   color: black;
-  background-color: lightgrey;
+  background-color: transparent;
   line-height: 20px;
-  font-size: 1em;
+  font-size: 1.2em;
   padding: 1px 5px;
   margin-bottom: 4px;
 }
@@ -2287,6 +2234,7 @@ lizmap-mouse-position > div.coords-unit > select{
   display: none;
 }
 
+#nav-tab-projects a::before,
 #nav-tab-switcher a::before,
 #nav-tab-metadata a::before,
 #nav-tab-edition a::before,
@@ -2327,7 +2275,6 @@ lizmap-mouse-position > div.coords-unit > select{
 
 .edition-tabs .nav-pills > .active > a, .edition-tabs .nav-pills > .active > a:hover, .edition-tabs .nav-pills > .active > a:focus{
   background-color: #93C01F;
-  background-image: linear-gradient(to bottom, #9BC144, #93C01F);
   color: white;
 }
 
@@ -2348,6 +2295,9 @@ lizmap-mouse-position > div.coords-unit > select{
   }
 }
 
+.ui-dialog {
+  z-index: 1500 !important;
+}
 
 /*dialog wait*/
 .liz-dialog-wait {
@@ -2372,7 +2322,7 @@ lizmap-mouse-position > div.coords-unit > select{
   display: none;
 }
 #loading {
-  background-image: url(img/loading.gif);
+  background-image: url(img/loading.svg);
   background-repeat: no-repeat;
   background-position-x: center;
   background-position-y: center;
@@ -2383,30 +2333,20 @@ lizmap-mouse-position > div.coords-unit > select{
     display: none !important;
 }
 
-
-
-/* Tooltips */
-div.tooltip {
-  z-index: 2000 !important;
-  position:fixed !important;
-}
-.tooltip-inner{
-  display: inline-block;
-}
-
-
 /* only maps dock style */
-#home #projects h2 {
-  color: white;
+#nav-tab-projects a::before{
+  background-position: -900px 0px;
 }
-#home #projects ul {
+#projects h2 {
+  color: var(--color-contrasted-text);;
+  background-color: var(--header-color);
+}
+#projects ul {
   margin: auto;
 }
-#home #projects ul li div.thumbnail {
+#projects ul li div.thumbnail {
   text-align: center;
 }
-
-
 
 /* Edition style */
 #edition .nav-tabs > li > a {
@@ -2429,14 +2369,15 @@ div.tooltip {
     border: 1px solid darkgray;
     border-bottom-color: transparent;
 }
+/* Remove border & padding */
 #edition div.tab-content {
-  border: 1px solid lightgrey;
-  padding: 10px;
+  /* border: 1px solid lightgrey;
+  padding: 10px; */
 }
 #edition div.jforms-table-group{
-  background-color: lightgrey;
-  padding: 10px 0px;
-  border-radius: 10px;
+  /* background-color: lightgrey; */
+  padding: 5px 0px;
+  /* border-radius: 10px; */
 }
 
 #edition-point-coord-form,
@@ -2528,6 +2469,10 @@ div.tooltip {
   display:block;
 }
 
+#lizmap-search .highlight {
+  color: #0094D6;
+}
+
 /* Selection */
 
 .selectiontool-export button:disabled{
@@ -2548,6 +2493,10 @@ div.tooltip {
   vertical-align: text-bottom;
 }
 
+#selectiontool .digitizing-circle, #selectiontool .digitizing-text{
+  display: none;
+}
+
 lizmap-selection-invert svg {
   width: 14px;
   height: 14px;
@@ -2559,11 +2508,15 @@ lizmap-selection-invert svg {
   min-width: 260px;
 }
 
+.digitizing .hide{
+  display: none;
+}
+
 .digitizing .btn {
-  width: 40px;
-  height: 40px;
+  width: 34px;
+  height: 34px;
   box-sizing: border-box;
-  padding: 5px;
+  padding: 4px;
 }
 
 .digitizing .dropdown-toggle{
@@ -2575,16 +2528,15 @@ lizmap-selection-invert svg {
   padding: 3px;
   position: absolute;
   left: 60px;
-  top: -1px;
+  top: -6px;
 }
-
 .digitizing svg {
   width: 24px;
   height: 24px;
 }
 
 svg.digitizing-selected-tool{
-  width: 15px;
+  width: 13px;
   position: absolute;
   bottom: -4px;
   right: 1px;
@@ -2603,12 +2555,17 @@ input[type="color"].digitizing-color{
 .digitizing-export .dropdown-menu{
   min-width: unset;
   position: absolute;
-  left: 60px;
-  top: -45px;
+  left: 47px;
+  top: -9px;
 }
 
 .digitizing .caret{
   transform: rotate(270deg);
+}
+
+.digitizing-import-export{
+  display: inline;
+  margin-left: 10px;
 }
 
 .digitizing-import{
@@ -2621,6 +2578,74 @@ input[type="color"].digitizing-color{
   display: inline-block;
   word-break: break-word;
   vertical-align: middle;
+}
+
+.digitizing-state{
+  max-height: 100px;
+  overflow: auto;
+  font-size: 0.8em;
+  padding: 5px;
+  font-style: italic;
+  background: lightgray;
+  margin-right: 5%;
+}
+
+.digitizing-constraints input{
+  width: 6em;
+}
+
+.digitizing-constraints .angle ~ .add-on{
+  font-size: x-large;
+}
+
+lizmap-digitizing details {
+  padding: 5px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.digitizing-text{
+  font-weight: bold;
+}
+
+.digitizing-text-tools{
+  margin-top: 5px;
+}
+
+.ol-tooltip {
+  position: relative;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 4px;
+  color: white;
+  padding: 4px 8px;
+  opacity: 0.7;
+  white-space: nowrap;
+  font-size: 12px;
+  cursor: default;
+  user-select: none;
+}
+.ol-tooltip-measure {
+  opacity: 1;
+  font-weight: bold;
+}
+.ol-tooltip-static {
+  background-color: #ffcc33;
+  color: black;
+  border: 1px solid white;
+}
+.ol-tooltip-measure:before,
+.ol-tooltip-static:before {
+  border-top: 6px solid rgba(0, 0, 0, 0.5);
+  border-right: 6px solid transparent;
+  border-left: 6px solid transparent;
+  content: "";
+  position: absolute;
+  bottom: -6px;
+  margin-left: -7px;
+  left: 50%;
+}
+.ol-tooltip-static:before {
+  border-top-color: #ffcc33;
 }
 
 /*
@@ -2687,7 +2712,6 @@ img {
 #theme-selector button.dropdown-toggle{
   width: 30px;
 }
-
 #theme-selector .mActionShowAllLayers{
   width: 18px;
   height: 18px;
@@ -2717,7 +2741,6 @@ img {
   max-height: 250px;
   overflow-y: auto;
 }
-
 /* Geolocation */
 lizmap-geolocation .geolocation-infos {
     background-color: lightgray;
@@ -2817,13 +2840,14 @@ lizmap-reverse-geom svg{
   height: 21px;
 }
 
-#print-launch{
-  position: relative;;
+.btn-print-launch {
+  position: relative;
 }
 
-#print-launch.spinner::after{
+.btn-print-launch.spinner::after {
   right: 5px;
 }
+
 /* lizmap-feature-toolbar */
 lizmap-feature-toolbar button.btn:hover,
 .attribute-layer-action-bar button.btn:not(.dropdown-toggle):hover{
@@ -2837,7 +2861,430 @@ lizmap-feature-toolbar button:hover > [class^="icon-"],
   background-image: url(images/glyphicons-halflings-white.png);
 }
 
-/* Don't display filter in attribute table */
-#attribute-table-container lizmap-feature-toolbar .feature-filter{
+.feature-atlas {
+  display: inline-block;
+  position: relative;
+}
+
+.feature-atlas .custom-labels {
+  position: absolute;
+  left: 0px;
+  background: white;
+  padding: 5px;
+  border: black solid 1px;
+}
+
+.feature-atlas .custom-labels button {
+  width: 100%;
+}
+
+/* In attribute table, don't display filter, export or print buttons */
+#attribute-table-container lizmap-feature-toolbar .feature-filter,
+#attribute-table-container lizmap-feature-toolbar .feature-export,
+#attribute-table-container lizmap-feature-toolbar .feature-print,
+#attribute-table-container lizmap-feature-toolbar .feature-atlas{
   display: none;
+}
+
+.feature-atlas button svg {
+  display: block;
+  width: 16px;
+  height: 20px;
+}
+
+.feature-atlas button:hover > img[src$=".svg"] {
+  filter: invert(1);
+}
+
+/* Form filter */
+.liz-filter-field-value{
+  line-height: 25px;
+  transform: scale(1.6);
+  margin-right: 8px!important;
+}
+
+lizmap-fullscreen {
+  position: absolute;
+  z-index: 1;
+  bottom: 5px;
+  left: 5px;
+}
+lizmap-fullscreen button {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+}
+lizmap-fullscreen button svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+  margin: auto;
+}
+
+lizmap-paste-geom {
+  display: inline-block;
+}
+
+lizmap-paste-geom svg {
+  width: 24px;
+  height: 24px;
+  display: inline-block;
+  vertical-align: text-top;
+}
+
+/* Treeview */
+
+lizmap-treeview .filtered, button#layerActionUnfilter.btn {
+  background-color: rgba(255, 171, 0, 0.4);
+}
+
+lizmap-treeview ul {
+  list-style: none;
+}
+
+lizmap-treeview li {
+  position: relative;
+}
+
+lizmap-treeview li > div {
+  display: flex;
+  border: 1px solid transparent;
+  padding-left: 4px;
+}
+
+lizmap-treeview li > div.selected {
+  border-color: #0094D6;
+}
+
+lizmap-treeview div.expandable{
+  display: inline-block;
+  position: absolute;
+  left: -25px;
+  padding: 0 5px;
+}
+
+lizmap-treeview div.expandable::before {
+  content: "▶";
+  cursor: pointer;
+}
+
+lizmap-treeview div.expandable.expanded {
+  transform: rotate(90deg);
+  color: #CE1F2D;
+}
+
+lizmap-treeview div.expandable ~ ul {
+  display: none;
+}
+
+lizmap-treeview div.expandable.expanded ~ ul {
+  display: block;
+}
+
+lizmap-treeview .node {
+  display: inline-flex;
+  flex-grow: 1;
+  padding-left: 2px;
+  align-items: center;
+  column-gap: 2px;
+}
+
+lizmap-treeview input[type="checkbox"] {
+  margin-top: 0;
+  margin-right: 5px;
+  align-self: baseline;
+  margin-top: 5px;
+  accent-color: #0094D6;
+  flex: 0 0 18px;
+  height: 18px;
+}
+
+lizmap-treeview input.rounded-checkbox {
+  border-radius: 50%;
+  vertical-align: middle;
+  border: 1px solid #767676;
+  appearance: none;
+  -webkit-appearance: none;
+  outline: none;
+  cursor: pointer;
+}
+
+lizmap-treeview input.rounded-checkbox[type="checkbox"]:focus{
+  outline: none;
+}
+
+lizmap-treeview input.rounded-checkbox:checked {
+  appearance: auto;
+  clip-path: circle(50% at 50% 50%);
+}
+
+lizmap-treeview .group label {
+  font-weight: bold;
+  user-select: none;
+}
+
+lizmap-treeview label {
+  flex-grow: 1;
+  margin: 0;
+  display: inline;
+}
+
+lizmap-treeview li.not-visible > div input[type="checkbox"],
+lizmap-treeview li.not-visible > label input[type="checkbox"],
+lizmap-treeview li.not-visible > ul.symbols label input[type="checkbox"],
+lizmap-treeview li.not-in-scale > label input[type="checkbox"],
+lizmap-treeview li.not-in-scale > ul.symbols label input[type="checkbox"] {
+  accent-color: #7F7F80;
+}
+
+lizmap-treeview li.not-visible > div label,
+lizmap-treeview li.not-visible > ul.symbols label,
+lizmap-treeview li.not-visible > label,
+lizmap-treeview li.not-in-scale > label,
+lizmap-treeview li.not-in-scale > ul.symbols label {
+  font-style: italic;
+  color: #7F7F80;
+}
+
+lizmap-treeview li.not-visible > div img,
+lizmap-treeview li.not-visible > ul.symbols img,
+lizmap-treeview li.not-visible > label img,
+lizmap-treeview li.not-in-scale > label img,
+lizmap-treeview li.not-in-scale > ul.symbols img {
+  filter: grayscale(1);
+}
+
+lizmap-treeview .layer-actions {
+  display: flex;
+}
+
+lizmap-treeview .layer-actions a {
+  text-decoration: none;
+}
+
+lizmap-treeview .layer-actions > * {
+  padding: 3px;
+}
+
+lizmap-treeview .icon-info-sign,
+lizmap-treeview .icon-remove-sign {
+  cursor: pointer;
+}
+
+lizmap-treeview .icon-remove-sign {
+  filter: invert(26%) sepia(71%) saturate(5158%) hue-rotate(354deg) brightness(91%) contrast(143%);
+}
+
+lizmap-treeview .icon-info-sign {
+  visibility: hidden;
+  margin-left: auto;
+  /* Make it centered vertically & horizontally */
+  background-origin: content-box;
+  border: 1px solid gray;
+  border-radius: 5px;
+}
+
+lizmap-treeview .node:hover .icon-info-sign {
+  visibility: visible;
+}
+
+lizmap-treeview a[href=""] {
+  visibility: hidden;
+}
+
+lizmap-treeview .loading {
+  position: relative;
+}
+
+lizmap-treeview .spinner::after {
+  border-width: 2px;
+  border-color: black transparent black transparent;
+  right: 2px;
+}
+
+lizmap-treeview .symbols img.legend {
+  margin-right: 4px;
+}
+
+lizmap-treeview img.legend[src="data:image/png;base64, "]{
+  visibility: hidden;
+}
+
+lizmap-tooltip.spinner::after {
+  border-width: 2px;
+  border-color: black transparent black transparent;
+  right: 2px;
+}
+
+lizmap-message button {
+  font-weight: bold;
+}
+
+/* Snap layer list */
+.snap-panel-controls {
+    margin:10px;
+}
+
+.snap-layers-list-title {
+    font-weight: bold;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.snap-layers-list {
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.snap-layer {
+    display: flex;
+    align-items: center;
+    height: 25px;
+}
+
+.snap-layer .snap-disabled {
+    color:gray;
+    font-style:italic;
+}
+
+.snap-layers-list input[type="checkbox"] {
+    margin-right: 5px;
+    align-self: baseline;
+    margin-top: 1px;
+    accent-color: #0094D6;
+    flex: 0 0 18px;
+    height: 18px;
+}
+
+/* CKEDITOR adaptations */
+.ck.ck-balloon-panel.ck-balloon-panel_visible {
+  z-index: 9999;
+}
+
+
+
+/* lizmap-features-table web component */
+lizmap-features-table {
+  font-size: 0.8em;
+}
+lizmap-features-table h4 {
+  font-size: 1.3em;
+}
+#popupcontent .lizmapPopupContent lizmap-features-table h4 {
+  border-bottom: none;
+  margin-bottom: 5px;
+}
+div.lizmap-features-table {
+  position: relative;
+}
+table.lizmap-features-table-container {
+  font-size: 0.9em;
+  position: relative;
+  max-height: 30vh;
+  overflow: auto;
+}
+
+
+/* Decrease the margin of the features table when a popup is displayed underneath (otherwise 20px)  */
+div.lizmap-features-table.popup-displayed table.lizmap-features-table-container {
+  margin-bottom: 5px;
+}
+
+/* Feature item line (tr) */
+table.lizmap-features-table-container tbody tr.lizmap-features-table-item {
+  border-top: 1px solid var(--color-contrasted-elements);
+  position: relative;
+
+  /* Light gray background for even lines */
+  &:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+
+  /* Invert colors on hover & focus */
+  &:hover, &:focus, &:active, &.popup-displayed {
+      background-color: var(--color-contrasted-elements);
+      color: var(--color-contrasted-text);
+  }
+}
+
+/* Pointer cursor  */
+table.lizmap-features-table-container tbody tr.lizmap-features-table-item.has-action {
+  cursor: pointer;
+}
+
+/* Hide other children of the table if only one child feature is active */
+div.lizmap-features-table.popup-displayed > table.lizmap-features-table-container > tbody > tr.lizmap-features-table-item:not(.popup-displayed) {
+    display: none;
+}
+/* In this context, display only the active child item */
+div.lizmap-features-table.popup-displayed > table.lizmap-features-table-container > tbody > tr.lizmap-features-table-item.popup-displayed {
+  display: revert;
+}
+/* Toolbar visible when popup is visible */
+div.lizmap-features-table div.lizmap-features-table-toolbar {
+  display: none;
+}
+div.lizmap-features-table.popup-displayed div.lizmap-features-table-toolbar {
+  position: absolute;
+  top: 0px;
+  right: 10px;
+  cursor: pointer;
+  display: block;
+  opacity: 0.6;
+  z-index: 1000;
+  &:hover {
+    opacity: 1;
+  }
+}
+div.lizmap-features-table-toolbar button {
+  background-color: var(--color-contrasted-elements-light);
+  color: var(--color-contrasted-elements);
+  width: 25px;
+  height: 25px;
+  &:hover, &:focus, &:active {
+    background-position: center;
+  }
+}
+/* close */
+div.lizmap-features-table-toolbar button.close-popup {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M11.9997 10.5865L16.9495 5.63672L18.3637 7.05093L13.4139 12.0007L18.3637 16.9504L16.9495 18.3646L11.9997 13.4149L7.04996 18.3646L5.63574 16.9504L10.5855 12.0007L5.63574 7.05093L7.04996 5.63672L11.9997 10.5865Z'%3E%3C/path%3E%3C/svg%3E");
+}
+/* previous */
+div.lizmap-features-table-toolbar button.previous-popup {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M10.8284 12.0007L15.7782 16.9504L14.364 18.3646L8 12.0007L14.364 5.63672L15.7782 7.05093L10.8284 12.0007Z'%3E%3C/path%3E%3C/svg%3E");
+  &.first {
+    display: none;
+  }
+}
+/* next */
+div.lizmap-features-table-toolbar button.next-popup {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M13.1717 12.0007L8.22192 7.05093L9.63614 5.63672L16.0001 12.0007L9.63614 18.3646L8.22192 16.9504L13.1717 12.0007Z'%3E%3C/path%3E%3C/svg%3E");
+  &.last {
+    display: none;
+  }
+}
+
+
+/* Popup div, visible only if popup-dsplayed class is present for it preceeding sibling */
+div.lizmap-features-table > table.lizmap-features-table-container + div.lizmap-features-table-item-popup {
+  display: none;
+  min-height: 200px;
+  min-width: 200px;
+  overflow: auto;
+}
+div.lizmap-features-table.popup-displayed > table.lizmap-features-table-container + div.lizmap-features-table-item-popup {
+  display: block;
+}
+/* Hide title of the popup, since it is already visible above */
+div.lizmap-features-table.popup-displayed > table.lizmap-features-table-container + div.lizmap-features-table-item-popup h4.lizmapPopupTitle {
+  display: none;
+}
+.hide {
+  display: none;
+}
+
+/* Remove margin for active item popup lizmapPopupDiv */
+#popupcontent div.lizmap-features-table.popup-displayed > table.lizmap-features-table-container + div.lizmap-features-table-item-popup div.lizmapPopupDiv {
+  margin: 0px !important;
 }

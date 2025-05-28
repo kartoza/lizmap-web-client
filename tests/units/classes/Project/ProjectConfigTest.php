@@ -8,7 +8,7 @@ use Lizmap\Project;
  */
 class projectConfigTest extends TestCase
 {
-    public function getConstructData()
+    public static function getConstructData()
     {
         $file = __DIR__.'/Ressources/events.qgs.cfg';
         $json = json_decode(file_get_contents($file));
@@ -20,6 +20,9 @@ class projectConfigTest extends TestCase
         $expected->tooltipLayers = new stdClass();
         $expected->loginFilteredLayers = new stdClass();
         $expected->filter_by_polygon = new stdClass();
+        $expected->metadata = new stdClass();
+        $expected->layouts = new stdClass();
+        $expected->warnings = new stdClass();
         return array(
             array($json, $expected),
         );
@@ -42,7 +45,7 @@ class projectConfigTest extends TestCase
         $file = __DIR__.'/Ressources/events.qgs.cfg';
         $data = json_decode(file_get_contents($file));
         $cachedProperties = array('layersOrder', 'locateByLayer', 'formFilterLayers', 'editionLayers',
-            'attributeLayers', 'options', 'layers', );
+            'attributeLayers', 'options', 'layers', 'metadata', 'warnings');
         $testCfg = new Project\ProjectConfig($data);
         foreach ($cachedProperties as $prop) {
             if (property_exists($data, $prop)) {
@@ -52,7 +55,7 @@ class projectConfigTest extends TestCase
         }
     }
 
-    public function getFindLayerData()
+    public static function getFindLayerData()
     {
         $file = __DIR__.'/Ressources/events.qgs.cfg';
         $layers = json_decode(file_get_contents($file));
@@ -87,7 +90,7 @@ class projectConfigTest extends TestCase
         }
     }
 
-    public function getEditionLayerByNameData()
+    public static function getEditionLayerByNameData()
     {
         $file = __DIR__.'/Ressources/montpellier.qgs.cfg';
         $eLayer = json_decode(file_get_contents($file));
@@ -116,7 +119,7 @@ class projectConfigTest extends TestCase
         }
     }
 
-    public function getEditionLayerByLayerIdData()
+    public static function getEditionLayerByLayerIdData()
     {
         $file = __DIR__.'/Ressources/montpellier.qgs.cfg';
         $eLayer = json_decode(file_get_contents($file));
@@ -148,7 +151,7 @@ class projectConfigTest extends TestCase
         }
     }
 
-    public function getOptionsValues()
+    public static function getOptionsValues()
     {
         return array(
             array('mapScales', [

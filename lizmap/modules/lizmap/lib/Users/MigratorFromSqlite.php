@@ -12,12 +12,10 @@ namespace Lizmap\Users;
 
 class MigratorFromSqlite
 {
-    public function __construct()
-    {
-    }
+    public function __construct() {}
 
-    const MIGRATE_RES_OK = 1;
-    const MIGRATE_RES_ALREADY_MIGRATED = 2;
+    public const MIGRATE_RES_OK = 1;
+    public const MIGRATE_RES_ALREADY_MIGRATED = 2;
 
     public function migrateUsersAndRights($resetBefore = false)
     {
@@ -96,7 +94,7 @@ class MigratorFromSqlite
                 $sequence = $rec->sequence_name;
                 if ($sequence) {
                     $conn->query('SELECT setval('.$conn->quote($sequence).',
-                    (SELECT max('.$conn->encloseName($idField).') 
+                    (SELECT max('.$conn->encloseName($idField).')
                     FROM '.$conn->encloseName($table).'))');
                 }
             }
@@ -106,7 +104,7 @@ class MigratorFromSqlite
     protected function createUsersTables()
     {
         // retrieve the configuration of jauth
-        $config = \jIniFile::read(\jApp::configPath('admin/auth.coord.ini.php'));
+        $config = \jIniFile::read(\jApp::appSystemPath('admin/auth.coord.ini.php'));
 
         // retrieve the driver used from the global configuration if exists
         if (isset(\jApp::config()->coordplugin_auth, \jApp::config()->coordplugin_auth['driver'])) {

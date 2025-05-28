@@ -1,4 +1,4 @@
-name: "Unit tests 🎳"
+name: "🎳 Unit tests"
 
 on:
   push:
@@ -11,19 +11,57 @@ on:
       - release_3_*
 
 jobs:
-  tests:
-    name: "Unit tests"
+  php-tests:
+    name: "🐘 PHP-Unit"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - php-version: "7.4"
+            php-unit: "9.6.22"
+          - php-version: "8.0"
+            php-unit: "9.6.22"
+          - php-version: "8.1"
+            php-unit: "10.5.40"
+          - php-version: "8.2"
+            php-unit: "11.5.2"
+          - php-version: "8.3"
+            php-unit: "11.5.2"
+          - php-version: "8.4"
+            php-unit: "11.5.2"
+    steps:
+
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP with tools
+        uses: shivammathur/setup-php@v2
+        # About the PHP version, do not forget to change in PHP-Stan as well
+        with:
+          php-version: ${{ matrix.php-version }}
+          tools: php-cs-fixer, phpunit
+
+      - name: Change the version of PHPUnit
+#        working-directory: tests/units
+        run: composer require --working-dir=tests/units/ phpunit/phpunit:${{ matrix.php-unit }}
+
+      - name: Running tests
+        run: make tests
+
+  js-tests:
+    name: "🟨 JS-Unit"
     runs-on: ubuntu-latest
     steps:
 
       - name: Check out repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Setup PHP with tools
-        uses: shivammathur/setup-php@v2
+      - uses: actions/setup-node@v4
         with:
-          php-version: '7.4'
-          tools: php-cs-fixer, phpunit
+          node-version: 21
+
+      - name: Install lizmap dependencies
+        run: npm install
 
       - name: Running tests
-        run: make tests
+        run: npm run js:test

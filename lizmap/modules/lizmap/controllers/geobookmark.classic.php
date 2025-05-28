@@ -18,11 +18,7 @@ class geobookmarkCtrl extends jController
         $this->whiteParams = array(
             'repository',
             'project',
-            'bbox',
-            'layers',
-            'crs',
-            'layerStyles',
-            'filter',
+            'hash',
         );
 
         parent::__construct($request);
@@ -69,7 +65,7 @@ class geobookmarkCtrl extends jController
         $ok = true;
 
         // Check name
-        $name = filter_var($this->param('name'), FILTER_SANITIZE_STRING);
+        $name = htmlspecialchars(strip_tags($this->param('name')));
         if (empty($name)) {
             $ok = false;
             jMessage::add('Please give a name', 'error');
@@ -81,7 +77,7 @@ class geobookmarkCtrl extends jController
             $record->name = $name;
             $params = array();
             foreach ($this->whiteParams as $param) {
-                $val = filter_var($this->param($param), FILTER_SANITIZE_STRING);
+                $val = htmlspecialchars(strip_tags($this->param($param)));
                 $params[$param] = $val;
             }
             $record->map = $params['repository'].':'.$params['project'];
@@ -93,7 +89,7 @@ class geobookmarkCtrl extends jController
             try {
                 $id = $dao->insert($record);
             } catch (Exception $e) {
-                jLog::log('Error while inserting the bookmark', 'error');
+                jLog::log('Error while inserting the bookmark', 'lizmapadmin');
                 jLog::logEx($e, 'error');
                 jMessage::add('Error while inserting the bookmark', 'error');
             }
@@ -168,7 +164,7 @@ class geobookmarkCtrl extends jController
             try {
                 $daogb->delete($id);
             } catch (Exception $e) {
-                jLog::log('Error while deleting the bookmark', 'error');
+                jLog::log('Error while deleting the bookmark', 'lizmapadmin');
                 jLog::logEx($e, 'error');
                 jMessage::add('Error while deleting the bookmark', 'error');
             }

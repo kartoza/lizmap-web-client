@@ -12,6 +12,7 @@ while($tryAgain) {
         continue;
     }
     $tryAgain = false;
+    pg_query($cnx, 'drop table if exists mapcontext cascade');
     pg_query($cnx, 'drop table if exists jacl2_subject_group cascade');
     pg_query($cnx, 'drop table if exists jacl2_user_group cascade');
     pg_query($cnx, 'drop table if exists jacl2_group cascade');
@@ -25,4 +26,3 @@ while($tryAgain) {
 }
 
 echo "  tables deleted\n";
-

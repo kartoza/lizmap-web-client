@@ -7,10 +7,27 @@ class QgisProjectForTests extends QgisProject
     public function __construct($data = null)
     {
         if ($data) {
-            parent::__construct(null, new lizmapServices(null, null, false, '', ''), new ContextForTests(), $data);
+            parent::__construct(null, new lizmapServices(null, (object) array(), false, '', ''), new ContextForTests(), $data);
         }
     }
 
+    public function readXMLProjectTest($file)
+    {
+         return $this->readXMLProject($file);
+    }
+
+    public function getLayers()
+    {
+         return $this->layers;
+    }
+    public function getRelations()
+    {
+         return $this->relations;
+    }
+    public function getRelationsFields()
+    {
+         return $this->relationsFields;
+    }
     public function readWMSInfoTest($xml)
     {
         return $this->readWMSInformation($xml);
@@ -49,6 +66,16 @@ class QgisProjectForTests extends QgisProject
         return $this->readLayers($xml);
     }
 
+    public function readQgisVersionForTests($xml)
+    {
+        return $this->readQgisProjectVersion($xml);
+    }
+
+    public function readLastSaveDateTimeForTests($file)
+    {
+        return $this->readLastSaveDateTime($file);
+    }
+
     public function readRelationsForTests($xml)
     {
         $this->xml = $xml;
@@ -65,9 +92,20 @@ class QgisProjectForTests extends QgisProject
         return $this->setLayerOpacity($cfg);
     }
 
-    public function setXml($xml)
+    public function getXmlForTest()
+    {
+        return $this->getXml();
+    }
+
+    public function setXmlForTest($xml)
     {
         $this->xml = $xml;
+    }
+
+
+    public function setPath($path)
+    {
+        $this->path = $path;
     }
 
     public function setLayers($layers)
@@ -78,6 +116,11 @@ class QgisProjectForTests extends QgisProject
     public function readEditionLayersForTest($eLayer)
     {
         $this->readEditionLayers($eLayer);
+    }
+
+    public function readEditionFormsForTest($eLayer, $prj)
+    {
+        $this->readEditionForms($eLayer, $prj);
     }
 
     public function readAttributeLayersForTest($aLayer)

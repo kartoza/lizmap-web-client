@@ -6,7 +6,7 @@ use PHPUnit\Framework\TestCase;
  */
 class lizmapRepositoryTest extends TestCase
 {
-    public function getTestGetPathData()
+    public static function getTestGetPathData()
     {
         $repo1 = array(
             'repository:test' => array(
@@ -69,7 +69,7 @@ class lizmapRepositoryTest extends TestCase
         unset($services, $rep);
     }
 
-    public function getTestUpdateData()
+    public static function getTestUpdateData()
     {
         $data1 = array(
             'repository:test' => array(
@@ -139,7 +139,7 @@ class lizmapRepositoryTest extends TestCase
         $section = 'repository:test';
 
         file_put_contents($iniFile, '');
-        $ini = new jIniFileModifier($iniFile);
+        $ini = new \Jelix\IniFile\IniModifier($iniFile);
         $services = new lizmapServices($data, (object) array(), true, '', null);
         $repo = $services->getLizmapRepository('test');
         if ($changedProp && $changedValue) {
@@ -156,7 +156,7 @@ class lizmapRepositoryTest extends TestCase
 
 /*  public function testGetProject()
     {
-        $ini = parse_ini_file(jApp::configPath('lizmapConfig.ini.php'), true);
+        $ini = parse_ini_file(jApp::varConfigPath('lizmapConfig.ini.php'), true);
         $services = new lizmapServices($ini, jApp::config(), true, jApp::varPath());
         $rep = $services->getLizmapRepository('montpellier');
         $proj = $rep->getProject('events');
@@ -178,7 +178,7 @@ class lizmapRepositoryTest extends TestCase
         );
 
         $projKeys = array('events', 'montpellier');
-        $ini = parse_ini_file(jApp::configPath('lizmapConfig.ini.php'), true);
+        $ini = parse_ini_file(jApp::varConfigPath('lizmapConfig.ini.php'), true);
         $services = new lizmapServices($ini, jApp::config(), true, jApp::varPath());
         $rep = $services->getLizmapRepository('montpellier');
         $projects = $rep->getProjects();
