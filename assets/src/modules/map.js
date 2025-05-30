@@ -389,7 +389,9 @@ export default class map extends olMap {
                 layerMaxResolution = baseLayerState.itemState.wmsMaxScaleDenominator <= 1 ? undefined : Utils.getResolutionFromScale(baseLayerState.layerConfig.maxScale, metersPerUnit);
             }
             if (baseLayerState.type === BaseLayerTypes.XYZ) {
+                const projExtent = getProjection('EPSG:3857').getExtent();
                 const tileGrid =new TileGrid({
+                    extent: projExtent,
                     origin: [-20037508, 20037508],
                     resolutions: map3857Resolutions,
                 });
