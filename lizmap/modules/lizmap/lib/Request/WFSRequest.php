@@ -177,6 +177,81 @@ class WFSRequest extends OGCRequest
     }
 
     /**
+     * @return int An HTTP code
+     */
+    public function checkingTypename()
+    {
+        $wfsLayerIds = $this->project->getWfsLayerIds();
+        // No layers published in WFS
+        if (empty($wfsLayerIds)) {
+            \jLog::log('No WFS layer available in project', 'error');
+            // Add a message for service exception report
+            \jMessage::add('No TYPENAME available', 'OperationNotSupported');
+
+            return 400;
+        }
+
+        $typenames = $this->requestedTypename();
+        // No typename given
+        if (!$typenames || !is_string($typenames)) {
+            if ($this->param('request') === 'getfeature') {
+                \jMessage::add('TYPENAME or FEATUREID is mandatory', 'RequestNotWellFormed');
+            } else {
+                \jMessage::add('TYPENAME is mandatory', 'RequestNotWellFormed');
+            }
+
+            return 400;
+        }
+
+        // Get user groups to check layouts, layers visibility and layers export permissions
+        $userGroups = array('');
+        if ($this->appContext->userIsConnected()) {
+            $userGroups = $this->appContext->aclUserGroupsId();
+        }
+
+        $typenames = explode(',', $typenames);
+        foreach ($typenames as $typename) {
+            $layer = $this->project->findLayerByAnyName($typename);
+            // Layer not found
+            if (!$layer) {
+                \jMessage::add('TYPENAME \''.$typename.'\' is not available', 'RequestNotWellFormed');
+
+                return 400;
+            }
+            // Layer not published in WFS
+            if (!in_array($layer->id, $wfsLayerIds)) {
+                \jMessage::add('TYPENAME \''.$typename.'\' is not available', 'RequestNotWellFormed');
+
+                return 400;
+            }
+
+            // no group_visibility config, nothing to do
+            if (!property_exists($layer, 'group_visibility')
+                || empty($layer->group_visibility)) {
+                continue;
+            }
+
+            // get group visibility as trimmed array
+            $groupVisibility = array_map('trim', $layer->group_visibility);
+            // check if user groups and the group visibility have no common values (disjoint)
+            if (count(array_intersect($userGroups, $groupVisibility)) == 0) {
+                if ($this->appContext->userIsConnected()) {
+                    // Forbidden : user has no right to see the layer
+                    \jMessage::add('Access forbidden to TYPENAME \''.$typename.'\'', 'Forbidden');
+
+                    return 403;
+                }
+                \jMessage::add('Unauthorized access to TYPENAME \''.$typename.'\'', 'AuthorizationRequired');
+
+                return 401;
+
+            }
+        }
+
+        return 200;
+    }
+
+    /**
      * @return OGCResponse
      *
      * @see https://en.wikipedia.org/wiki/Web_Feature_Service#Static_Interfaces.
@@ -217,6 +292,12 @@ class WFSRequest extends OGCRequest
      */
     protected function process_describefeaturetype()
     {
+        // Checking Typename which is mandatory for DescribeFeatureType
+        $typenameCheckingCode = $this->checkingTypename();
+        if ($typenameCheckingCode !== 200) {
+            return $this->serviceException($typenameCheckingCode);
+        }
+
         // Extensions to get aliases and type
         $returnJson = (strtolower($this->param('outputformat', '')) == 'json');
         if ($returnJson) {
@@ -282,13 +363,20 @@ class WFSRequest extends OGCRequest
             return $this->getfeatureQgis();
         }
 
+        // Checking Typename which is mandatory for GetFeature
+        // Check only if we are not in the editing context
+        // To let editors not publish some vector layers in WFS/OAPIF
+        // to fill in the value relation or relation references
+        // of some form fields
+        if (!$this->editingContext) {
+            $typenameCheckingCode = $this->checkingTypename();
+            if ($typenameCheckingCode !== 200) {
+                return $this->serviceException($typenameCheckingCode);
+            }
+        }
+
         // Get type name
         $typename = $this->requestedTypename();
-        if (!$typename) {
-            \jMessage::add('TYPENAME or FEATUREID is mandatory', 'RequestNotWellFormed');
-
-            return $this->serviceException();
-        }
 
         // add outputformat if not provided
         $output = $this->param('outputformat');
@@ -338,6 +426,7 @@ class WFSRequest extends OGCRequest
         // and only for GeoJSON (specific to Lizmap)
         // and only if it is not a complex query like table="(SELECT ...)"
         // and if FORCE_QGIS parameter is not set to 1
+
         if ($provider == 'postgres'
             && empty($filter)
             && strtolower($output) == 'geojson'
@@ -502,8 +591,23 @@ class WFSRequest extends OGCRequest
         return '';
     }
 
-    protected function buildQueryBase($cnx, $params, $wfsFields)
+    /**
+     * Build the base SQL query to fetch data from the database.
+     *
+     * @param mixed $cnx           Database connection
+     * @param mixed $params        Request parameters
+     * @param mixed $wfsFields     List of WFS fields
+     * @param bool  $isHitsRequest True if the request must only get the features count
+     *
+     * @return string
+     */
+    protected function buildQueryBase($cnx, $params, $wfsFields, $isHitsRequest = false)
     {
+        // For hits requests, no need to get the fields or geometry
+        if ($isHitsRequest) {
+            return 'SELECT * FROM '.$this->datasource->table;
+        }
+
         $sql = ' SELECT ';
         $propertyname = '';
         if (array_key_exists('propertyname', $params)) {
@@ -627,6 +731,24 @@ class WFSRequest extends OGCRequest
         $sql .= '", '.$makeEnvelopeSql.')';
 
         return $sql;
+    }
+
+    /**
+     * Get the SQL filter configured in QGIS layer datasource.
+     *
+     * @return string The SQL filter enclosed with parenthesis
+     */
+    protected function getDatasourceSql()
+    {
+        // Get the SQL filter from QGIS layer datasource
+        $dtsql = trim($this->datasource->sql);
+
+        // Add it
+        if (!empty($dtsql)) {
+            return ' AND ( '.trim($dtsql).' ) ';
+        }
+
+        return '';
     }
 
     protected function parseExpFilter($cnx, $params)
@@ -760,27 +882,34 @@ class WFSRequest extends OGCRequest
             return $this->getfeatureQgis();
         }
 
+        // For getFeature with parameter RESULTTYPE=hits
+        // We should just return the number of features
+        $isHitsRequest = false;
+        if (array_key_exists('resulttype', $params) && $params['resulttype'] == 'hits') {
+            $isHitsRequest = true;
+        }
+
         // Get WFS fields
         $wfsFields = $this->qgisLayer->getWfsFields();
 
         // Verifying that every wfs fields are db fields
         // if not return getfeatureQgis
-        foreach ($wfsFields as $field) {
-            if (!array_key_exists($field, $dbFields)) {
-                return $this->getfeatureQgis();
+        if (!$isHitsRequest) {
+            foreach ($wfsFields as $field) {
+                if (!array_key_exists($field, $dbFields)) {
+                    return $this->getfeatureQgis();
+                }
             }
         }
 
         // Build SQL
-        $sql = $this->buildQueryBase($cnx, $params, $wfsFields);
+        $sql = $this->buildQueryBase($cnx, $params, $wfsFields, $isHitsRequest);
 
         // WHERE
         $sql .= ' WHERE True';
 
-        $dtsql = trim($this->datasource->sql);
-        if (!empty($dtsql)) {
-            $sql .= ' AND '.$dtsql;
-        }
+        // Add datasource SQL filter
+        $sql .= $this->getDatasourceSql();
 
         // BBOX
         $sql .= $this->getbboxSql($params);
@@ -834,9 +963,16 @@ class WFSRequest extends OGCRequest
             $geometryname = strtolower($params['geometryname']);
         }
 
-        // $this->appContext->logMessage($sql);
-        // Use PostgreSQL method to export geojson
-        $sql = $this->setGeojsonSql($sql, $cnx, $typename, $geometryname);
+        // For getFeature with parameter RESULTTYPE=hits
+        // We should just return the number of features
+        if ($isHitsRequest) {
+            $sql = $this->getResultTypeHitsSql($sql);
+        } else {
+            // Else we should return all corresponding features
+            // $this->appContext->logMessage($sql);
+            // Use PostgreSQL method to export geojson
+            $sql = $this->setGeojsonSql($sql, $cnx, $typename, $geometryname);
+        }
 
         // $this->appContext->logMessage($sql);
         // Run query
@@ -848,16 +984,41 @@ class WFSRequest extends OGCRequest
             return $this->getfeatureQgis();
         }
 
-        return new OGCResponse(200, 'application/vnd.geo+json; charset=utf-8', (function () use ($q) {
-            yield '{"type": "FeatureCollection", "features": [';
-            $virg = '';
-            foreach ($q as $d) {
-                yield $virg.$d->geojson;
-                $virg = ',';
-            }
+        // For Hits request, get simple result
+        if ($isHitsRequest) {
+            return new OGCResponse(
+                200,
+                'application/vnd.geo+json; charset=utf-8',
+                (function () use ($q) {
+                    yield '{"type": "FeatureCollection", ';
+                    foreach ($q as $d) {
+                        yield ' "numberOfFeatures": '.$d->numberOfFeatures.', ';
 
-            yield ']}';
-        })());
+                        yield ' "timeStamp": "'.$d->timeStamp.'" ';
+
+                        break;
+                    }
+
+                    yield '}';
+                })()
+            );
+        } else {
+            // Standard GetFeature request returning all features
+            return new OGCResponse(
+                200,
+                'application/vnd.geo+json; charset=utf-8',
+                (function () use ($q) {
+                    yield '{"type": "FeatureCollection", "features": [';
+                    $virg = '';
+                    foreach ($q as $d) {
+                        yield $virg.$d->geojson;
+                        $virg = ',';
+                    }
+
+                    yield ']}';
+                })()
+            );
+        }
     }
 
     /**
@@ -1006,5 +1167,26 @@ class WFSRequest extends OGCRequest
         --) As fc';
 
         return $sql;
+    }
+
+    /**
+     * Get the SQL used to count the features.
+     *
+     * This is used for RESULTTYPE=hits
+     *
+     * @param string $sql
+     *
+     * @return string
+     */
+    private function getResultTypeHitsSql($sql)
+    {
+        $hitsSql = ' SELECT ';
+        $hitsSql .= ' count(*) AS "numberOfFeatures", ';
+        $hitsSql .= ' to_char(now(), \'YYYY-MM-DD"T"HH24:MI:SS\') AS "timeStamp"';
+        $hitsSql .= ' FROM (';
+        $hitsSql .= $sql;
+        $hitsSql .= ' ) AS hits';
+
+        return $hitsSql;
     }
 }

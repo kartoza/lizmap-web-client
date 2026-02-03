@@ -58,7 +58,16 @@ class serviceCtrl extends jController
 
         lizmap::startMetric();
 
+        // Optional BASIC authentication
         $ok = Checker::checkCredentials($_SERVER);
+        if (!$ok) {
+            jMessage::add(
+                jLocale::get('view~default.service.access.wrong_credentials.title'),
+                'AuthorizationRequired'
+            );
+
+            return $this->serviceException();
+        }
 
         // Get parameters
         if (!$this->getServiceParameters()) {
@@ -651,11 +660,25 @@ class serviceCtrl extends jController
      */
     protected function GetLegendGraphics($wmsRequest)
     {
-        $result = $wmsRequest->process();
-
         /** @var jResponseBinary $rep */
         $rep = $this->getResponse('binary');
+        // Etag header and cache control
+        $etag = 'GetLegendGraphic-'.$wmsRequest->param('layer', $wmsRequest->param('layers', ''));
+        $etag = $this->buildEtag($etag);
+        $respCanBeCached = $this->canBeCached();
+        if ($respCanBeCached && $rep->isValidCache(null, $etag)) {
+            $this->setACAOHeader($rep);
+
+            return $rep;
+        }
+
+        $result = $wmsRequest->process();
         $this->setupBinaryResponse($rep, $result, 'qgis_server_legend');
+
+        if ($respCanBeCached) {
+            $this->setEtagCacheHeaders($rep, $etag);
+            $this->setACAOHeader($rep);
+        }
 
         return $rep;
     }

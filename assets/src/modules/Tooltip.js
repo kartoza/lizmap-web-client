@@ -32,7 +32,7 @@ export default class Tooltip {
         }
 
         // Remove previous layer if any
-        mainLizmap.map.removeLayer(this._activeTooltipLayer);
+        mainLizmap.map.removeToolLayer(this._activeTooltipLayer);
 
         const layerTooltipCfg = mainLizmap.initialConfig.tooltipLayers.layerConfigs[layerOrder];
         const layerName = layerTooltipCfg.name;
@@ -187,7 +187,7 @@ export default class Tooltip {
      * Deactivate tooltip
      */
     deactivate() {
-        mainLizmap.map.removeLayer(this._activeTooltipLayer);
+        mainLizmap.map.removeToolLayer(this._activeTooltipLayer);
         if (this._onPointerMove) {
             mainLizmap.map.un('pointermove', this._onPointerMove);
         }

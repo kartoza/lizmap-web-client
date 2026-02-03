@@ -335,6 +335,9 @@ class editionCtrl extends jController
                 'GEOMETRYNAME' => 'none',
                 'PROPERTYNAME' => implode(',', $propertyName),
                 'FEATUREID' => $featureId,
+                // In the editing context, we only need to get one single feature
+                // This could change in the future if we implement editing multiple features at once
+                'MAXFEATURES' => 1,
             );
 
             if ($exp_filter) {
@@ -436,6 +439,7 @@ class editionCtrl extends jController
             $qgisForm->setFormDataFromFields($this->featureData->features[0]);
             $form->initModifiedControlsList();
         }
+        $form->getContainer()->privateData['formWidgetsAttributes'] = $qgisForm->getFormWidgetsAttributes();
 
         return $qgisForm;
     }
@@ -647,7 +651,7 @@ class editionCtrl extends jController
         $tpl->assign('title', $title);
         $tpl->assign('form', $form);
         $tpl->assign('formPlugins', $qgisForm->getFormPlugins());
-        $tpl->assign('widgetsAttributes', $qgisForm->getFormWidgetsAttributes());
+        $tpl->assign('widgetsAttributes', $form->getContainer()->privateData['formWidgetsAttributes']);
         $tpl->assign('ajaxNewFeatureUrl', jUrl::get('lizmap~edition:saveNewFeature'));
         $tpl->assign('groupVisibilities', qgisExpressionUtils::evaluateGroupVisibilities($attributeEditorForm, $form));
 

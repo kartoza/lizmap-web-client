@@ -9,9 +9,12 @@
  * @license   https://www.mozilla.org/MPL/ Mozilla Public Licence
  */
 
+use Lizmap\Request\Proxy;
 use LizmapAdmin\RepositoryRightsService;
+use LizmapApi\ApiException;
 use LizmapApi\Credentials;
 use LizmapApi\Error;
+use LizmapApi\RepoCreator;
 use LizmapApi\RestApiCtrl;
 use LizmapApi\Utils;
 
@@ -29,8 +32,14 @@ class repository_restCtrl extends RestApiCtrl
         /** @var jResponseJson $rep */
         $rep = $this->getResponse('json');
 
+        // User must be authenticated with BASIC auth
         if (!Credentials::handle()) {
             return Error::setError($rep, 401);
+        }
+
+        // Check rights
+        if (!jAcl2::check('lizmap.admin.repositories.view')) {
+            return Error::setError($rep, 403);
         }
 
         if ($this->param('repo') != null) {
@@ -81,7 +90,7 @@ class repository_restCtrl extends RestApiCtrl
             $repo = lizmap::getRepository($this->param('repo'));
 
             if ($repo == null) {
-                throw new Exception("Valid repository is needed", 404);
+                throw new ApiException("The repository doesn't exist.", 404);
             }
 
             $referer = $this->request->header('Referer');
@@ -96,10 +105,69 @@ class repository_restCtrl extends RestApiCtrl
                 'accessControlAllowOrigin' => $repo->getACAOHeaderValue($referer),
                 'rightsGroup' => $rights,
             );
-        } catch (Throwable $e) {
-            return Error::setError($rep, $e->getCode());
+        } catch (ApiException $e) {
+            return Error::setError($rep, $e->getCode(), $e->getMessage());
+        } catch (Exception $e) {
+            jLog::logEx($e, 'error');
+
+            return Error::setError($rep, 500, $e->getMessage());
         }
         $rep->data = $response;
+
+        return $rep;
+    }
+
+    /**
+     * Handles the creation of a repository based on provided parameters.
+     *
+     * @return object a JSON response object
+     */
+    public function post(): object
+    {
+        /** @var jResponseJson $rep */
+        $rep = $this->getResponse('json');
+
+        // User must be authenticated with BASIC auth
+        if (!Credentials::handle()) {
+            return Error::setError($rep, 401);
+        }
+
+        // Check rights
+        if (!jAcl2::check('lizmap.admin.repositories.view')
+            || !jAcl2::check('lizmap.admin.repositories.create')
+        ) {
+            return Error::setError($rep, 403);
+        }
+
+        $key = $this->param('repo');
+        $label = $this->param('label');
+        $path = $this->param('path');
+        $allowUserDefinedThemes = Utils::isValidBooleanValue($this->param('allowUserDefinedThemes', false));
+        $createDirectory = Utils::isValidBooleanValue($this->param('createDirectory'));
+
+        try {
+            $isCreated = RepoCreator::createRepository($key, $label, $path, $allowUserDefinedThemes, $createDirectory);
+
+            $rep->data = array(
+                'key' => $key,
+                'label' => $label,
+                'path' => $path,
+                'allowUserDefinedThemes' => $allowUserDefinedThemes,
+                'newDirectoryCreated' => $createDirectory,
+                'repoCreated' => $isCreated,
+            );
+
+            $rep->setHttpStatus(
+                201,
+                Proxy::getHttpStatusMsg(201),
+            );
+        } catch (ApiException $e) {
+            return Error::setError($rep, $e->getCode(), $e->getMessage());
+        } catch (Exception $e) {
+            jLog::logEx($e, 'error');
+
+            return Error::setError($rep, 500, $e->getMessage());
+        }
 
         return $rep;
     }

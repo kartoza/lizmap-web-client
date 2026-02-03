@@ -1860,6 +1860,7 @@ lizmap-mouse-position > div.coords-unit > select{
   left : 50%;
   position : absolute;
   z-index : 6000;
+  min-height: 0;
 }
 #message.span6 {
   margin-left:-285px;
@@ -3104,6 +3105,8 @@ lizmap-treeview .spinner::after {
 
 lizmap-treeview .symbols img.legend {
   margin-right: 4px;
+  object-fit: cover;
+  min-width: 16px;
 }
 
 lizmap-treeview img.legend[src="data:image/png;base64, "]{

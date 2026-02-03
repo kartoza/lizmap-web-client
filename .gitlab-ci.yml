@@ -45,12 +45,8 @@ build:
       - lizmap/www/assets/js/timemanager.js.map
       - lizmap/www/assets/js/view.js
       - lizmap/www/assets/js/view.js.map
-      - lizmap/www/assets/js/137.bundle.js
-      - lizmap/www/assets/js/137.bundle.js.map
-      - lizmap/www/assets/js/BufferOp.bundle.js
-      - lizmap/www/assets/js/BufferOp.bundle.js.map
-      - lizmap/www/assets/js/OLparser.bundle.js
-      - lizmap/www/assets/js/OLparser.bundle.js.map
+      - lizmap/www/assets/js/*.bundle.js
+      - lizmap/www/assets/js/*.bundle.js.map
   tags:
     - fabric
 
@@ -152,7 +148,7 @@ deploy-docker-unstable:
   image: ${REGISTRY_URL}/factory-ci-runner:factory-ci
   stage: deploy
   script:
-    - update-service lizmap
+    - update-service lizmap org/infrav3
   environment:
     name: snap
   dependencies:

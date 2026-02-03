@@ -517,7 +517,11 @@ var lizLayerFilterTool = function () {
                     }
 
                     for (const feat of result) {
-                        globalThis['filterConfig'][field_item.order]['items'][DOMPurify.sanitize(feat['v'])] = feat['c'];
+                        if (feat['v'] !== null) {
+                            globalThis['filterConfig'][field_item.order]['items'][DOMPurify.sanitize(feat['v'].toString())] = feat['c'];
+                        } else {
+                            globalThis['filterConfig'][field_item.order]['items'][feat['v']+''] = feat['c']; // 'null' for null value
+                        }
                     }
 
                     var dhtml = '';
@@ -525,10 +529,8 @@ var lizLayerFilterTool = function () {
                         globalThis['filterConfig'][field_item.order]['items']
                     );
 
-                    // Order fkeys alphabetically (which means sort checkboxes for each field)
-                    fkeys.sort(function (a, b) {
-                        return a.localeCompare(b);
-                    });
+                    // Order fkeys alphanumerically (which means sort checkboxes for each field)
+                    fkeys.sort(new Intl.Collator(undefined, { numeric: true }).compare);
 
                     for (const f_val of fkeys) {
                         // Replace key by value if defined
@@ -1474,8 +1476,15 @@ var lizLayerFilterTool = function () {
                 if (!bounds || abounds.length != 4) {
                     return false;
                 }
+                abounds = abounds.map(function (item) {
+                    return parseFloat(item);
+                });
+                if (isNaN(abounds[0]) || isNaN(abounds[1]) || isNaN(abounds[2]) || isNaN(abounds[3])) {
+                    return false;
+                }
                 lizMap.mainLizmap.map.getView().fit(abounds);
-                return false;
+
+                return true;
             }
 
             // Launch LayerFilter feature

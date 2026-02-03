@@ -9,6 +9,7 @@
  */
 
 import { extend } from 'ol/extent.js';
+import GeoJSON from 'ol/format/GeoJSON.js';
 
 import WFS from '../modules/WFS.js';
 import WMS from '../modules/WMS.js';
@@ -819,7 +820,12 @@ window.lizMap = function() {
         var options = '<option value="-1" label="'+placeHolder+'"></option>';
         for (var fid in features) {
             var feat = features[fid];
-            options += '<option value="' + feat.id + '">' + DOMPurify.sanitize(feat.properties[locate.fieldName]) + '</option>';
+            options += '<option value="' + feat.id + '">';
+            // DOMPurify.sanitize needs a string
+            options += feat.properties[locate.fieldName] !== null ?
+                DOMPurify.sanitize(feat.properties[locate.fieldName].toString()) :
+                feat.properties[locate.fieldName]+''; // 'null' for null value
+            options += '</option>';
         }
         // add option list
         $('#locate-layer-'+cleanName(aName)).html(options);
@@ -1046,8 +1052,14 @@ window.lizMap = function() {
             for (var i=0, len=features.length; i<len; i++) {
                 var feat = features[i];
                 locate.features[feat.id.toString()] = feat;
-                if ( !('filterFieldName' in locate) )
-                    options += '<option value="' + feat.id + '">' + DOMPurify.sanitize(feat.properties[locate.fieldName]) + '</option>';
+                if ( !('filterFieldName' in locate) ) {
+                    options += '<option value="' + feat.id + '">';
+                    // DOMPurify.sanitize needs a string
+                    options += feat.properties[locate.fieldName] !== null ?
+                        DOMPurify.sanitize(feat.properties[locate.fieldName].toString()) :
+                        feat.properties[locate.fieldName]+''; // 'null' for null value
+                    options += '</option>';
+                }
             }
             // listen to select changes
             $('#locate-layer-'+layerName).html(options).change(function() {
@@ -3575,6 +3587,14 @@ window.lizMap = function() {
          * Method: init
          */
         init: function() {
+            var self = this;
+            // defined an attribute initialized
+            // to launch this method only one
+            if (self.initialized) {
+                return;
+            }
+            self.initialized = true;
+
             // Initialize global variables
             const lizmapVariablesJSON = document.getElementById('lizmap-vars')?.innerText;
             if (lizmapVariablesJSON) {
@@ -3587,8 +3607,6 @@ window.lizMap = function() {
                     console.warn('JSON for Lizmap global variables is not valid!');
                 }
             }
-
-            var self = this;
 
             // Get config
             const configRequest = fetch(globalThis['lizUrls'].config + '?' + new URLSearchParams(globalThis['lizUrls'].params)).then(function (response) {
@@ -3688,13 +3706,16 @@ window.lizMap = function() {
                 const wmsCapaData = responses[2].value;
                 const wmtsCapaData = responses[3].value;
                 const wfsCapaData = responses[4].value;
-                let featuresExtent = responses[5].value?.features?.[0]?.bbox;
-                let startupFeatures = responses[5].value?.features;
-
-                if(featuresExtent){
-                    for (const feature of startupFeatures) {
-                        featuresExtent = extend(featuresExtent, feature.bbox);
-                    }
+                const startupFeaturesData = responses[5].value;
+                let featuresExtent;
+                if (startupFeaturesData) {
+                    const startupFeatures = (new GeoJSON()).readFeatures(startupFeaturesData);
+                    featuresExtent = startupFeatures[0].getGeometry().getExtent();
+                    startupFeatures.forEach(feature => extend(featuresExtent, feature.getGeometry().getExtent()));
+                } else if (responses[5].status === 'rejected') {
+                    console.error('An error occurred while loading the features to zoom to at startup: '+responses[5].reason);
+                    mAddMessage(lizDict['startup.features.error'],'error',true)
+                        .attr('id','lizmap-startup-features-error-message');
                 }
 
                 /**
@@ -4109,6 +4130,7 @@ lizMap.events.on({
     }
 });
 
+// Do some User interface changes
 $(document).ready(function () {
     // start waiting
     $('body').css('cursor', 'wait');
@@ -4125,7 +4147,5 @@ $(document).ready(function () {
     // configurate OpenLayers
     OpenLayers.DOTS_PER_INCH = 96;
 
-    // initialize LizMap
-    lizMap.init();
     $( "#loading" ).css('min-height','128px');
 });
