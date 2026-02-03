@@ -139,6 +139,11 @@ class QgisProject
     protected $customProjectVariables = array();
 
     /**
+     * @var array<string> list of layer ids published in WFS
+     */
+    protected $wfsLayerIds = array();
+
+    /**
      * @var \lizmapServices
      */
     protected $services;
@@ -159,6 +164,7 @@ class QgisProject
         'qgisProjectVersion',
         'lastSaveDateTime',
         'customProjectVariables',
+        'wfsLayerIds',
     );
 
     /**
@@ -330,6 +336,16 @@ class QgisProject
     public function getCustomProjectVariables()
     {
         return $this->customProjectVariables;
+    }
+
+    /**
+     * Get the list of layer ids published in WFS.
+     *
+     * @return array<string>
+     */
+    public function getWfsLayerIds(): array
+    {
+        return $this->wfsLayerIds;
     }
 
     /**
@@ -1318,6 +1334,7 @@ class QgisProject
         $this->themes = $this->readThemes($qgsXml);
         $this->customProjectVariables = $this->readCustomProjectVariables($qgsXml);
         $this->useLayerIDs = $this->readUseLayerIDs($qgsXml);
+        $this->wfsLayerIds = $this->readWfsLayers($qgsXml);
         $this->layers = $this->readLayers($qgsXml);
         list($this->relations, $this->relationsFields) = $this->readRelations($qgsXml);
     }
@@ -1426,6 +1443,56 @@ class QgisProject
         fclose($fp);
 
         return $version;
+    }
+
+    /**
+     * Read the users names of the QGS file.
+     *
+     * @param string $qgs_path the path to the QGS file
+     *
+     * @return array the name and full name
+     */
+    protected function readUsers($qgs_path)
+    {
+        $fp = fopen($qgs_path, 'r');
+        $names = array(
+            'saveUser' => '',
+            'saveUserFull' => '',
+        );
+        for ($i = 0; $i < 5; ++$i) {
+            $line = fgets($fp);
+            if (preg_match('/saveUser="([^"]*)"/', $line, $matches)) {
+                $names['saveUser'] = $matches[1];
+            }
+            if (preg_match('/saveUserFull="([^"]*)"/', $line, $matches)) {
+                $names['saveUserFull'] = $matches[1];
+            }
+        }
+        fclose($fp);
+
+        return $names;
+    }
+
+    /**
+     * Read the project name of the QGS file.
+     *
+     * @param string $qgs_path the path to the QGS file
+     *
+     * @return string the project name
+     */
+    protected function readProjectName($qgs_path)
+    {
+        $fp = fopen($qgs_path, 'r');
+        $projectName = '';
+        for ($i = 0; $i < 5; ++$i) {
+            $line = fgets($fp);
+            if (preg_match('/projectname="([^"]*)"/', $line, $matches)) {
+                $projectName = $matches[1];
+            }
+        }
+        fclose($fp);
+
+        return $projectName;
     }
 
     /**
@@ -1693,6 +1760,24 @@ class QgisProject
         $WMSUseLayerIDs = $xml->xpath('//properties/WMSUseLayerIDs');
 
         return $WMSUseLayerIDs && $WMSUseLayerIDs[0] == 'true';
+    }
+
+    /**
+     * @param \SimpleXMLElement $xml
+     *
+     * @return array<string>
+     */
+    protected function readWfsLayers($xml)
+    {
+        $wfsLayers = array();
+        $xmlWfsLayers = $xml->xpath('//properties/WFSLayers/value');
+        if ($xmlWfsLayers) {
+            foreach ($xmlWfsLayers as $xmlWfsLayer) {
+                $wfsLayers[] = (string) $xmlWfsLayer;
+            }
+        }
+
+        return $wfsLayers;
     }
 
     /**
@@ -2449,5 +2534,28 @@ class QgisProject
         }
 
         return $props;
+    }
+
+    /**
+     * Retrieve the first QGIS config line as an array.
+     *
+     * @return array Array filled with "version", "projectName", "saveDateTime", "saveUser" and "saveUserFull"
+     *
+     *@example <qgis
+     *   projectname="" saveDateTime="2024-11-06T14:13:16" saveUser="chandler"
+     *   saveUserFull="Chandler Bing" version="3.34.12-Prizren"
+     * >
+     */
+    public function getFirstQgisConfigLine(): array
+    {
+        $names = $this->readUsers($this->path);
+
+        return array(
+            'version' => $this->getQgisProjectVersion(),
+            'projectName' => $this->readProjectName($this->path),
+            'saveDateTime' => $this->readLastSaveDateTime($this->path),
+            'saveUser' => $names['saveUser'],
+            'saveUserFull' => $names['saveUserFull'],
+        );
     }
 }

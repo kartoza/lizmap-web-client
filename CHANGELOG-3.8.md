@@ -8,6 +8,147 @@ with some extra keywords: backend, tests, test, translation, funders, important
 
 ## Unreleased
 
+## 3.8.15 - 2025-11-25
+
+### Funders
+
+* **[Cédégis](https://www.cedegis.fr/)**
+* **[Faunalia](https://www.faunalia.eu/fr)** with @mind84
+* **[Avignon](https://www.avignon.fr/)**
+* **[TDPA](https://www.terredeprovence-agglo.com/)**
+* **[Klein und Leber GbR](https://www.gisgeometer.de/)** with @meyerlor
+* **[Destination Bretagne Sud Golfe du Morbihan](https://destination-bretagnesud.bzh/)**
+* **[Conseil Départemental du Calvados](https://www.calvados.fr/)**
+
+### Fixed
+
+* Editing - Upload widget preview and keep value
+* Duplicated baselayers in single wms mode
+* Request IP now provided by JelixContext for logging event
+* Filter unique values list is empty if one is null
+* Selection tool - new, add & remove selection buttons shift vertically on hover
+* jAcl2Db cache clear when user is added to or removed from a group administration
+* Add German localization for DataTables, contribution from @meyerlor
+* Admin CORS: spaces in accessControlAllowOrigin
+* Editing - Allow to create a feature on a layer with login based attribute filter
+* CSS: legend image min width
+* WFS GetFeature - Query database on RESULTTYPE=hits requests for PostgreSQL layers
+
+### Tests
+
+* Port Dataviz from Cypress to Playwright
+
+### Backend
+
+* Upgrade Jelix to version 1.8.21 - Fix a security issue in authentication.
+* Update OpenLayers to version [v10.7.0](https://github.com/openlayers/openlayers/releases/tag/v10.7.0) with:
+  * Several WebGL renderer bug fixes, along with improved memory management
+  * Updates for the Polyline feature format
+  * API improvements and bug fixes on the Select, Extent and Snap interactions
+  * Reprojection support for VectorTile layers
+  * Full web worker support for Map, with an (Offscreen)Canvas as map target
+  * Fixed cache and rendering for reprojected raster/image tile layers
+  * Several updated and new examples, including a globe-like map with Equal Earth projection
+
+## 3.8.14 - 2025-10-07
+
+### Fixed
+
+* FeaturesTable - error when the features list is empty
+* Editing - Avoid checking valuerelation & relationreference fields as valid WFS typenames
+
+## 3.8.13 - 2025-09-09
+
+### Funders
+
+* **[Le Grand Narbonne](https://www.legrandnarbonne.com/)**
+* **[FM Projet](https://fmprojet.fr/)**
+
+### Fixed
+
+* Tooltip - Fix configured fields not used when HTML template is not defined
+* Check URL when submitting AccessControlAllowOrigin in admin Form
+* WFS GetFeature on PostGIS does not checked if the layer is published
+* QGIS Project form_advanced: group visibility expression
+* Zoom to point features at startup
+* The way to check if the lizmap_search is available
+* Api - improve rights
+
+### Changed
+
+* Use rspack instead of webpack
+* lizmap-features-table: Display a message when no features found
+
+### Tests
+
+* e2e: Porting Dataviz API form Cypress to Playwright
+* e2e playwright tests popup: default buffer length
+* e2e: enhancing tooltips tests
+* fix restrict key for dumping database
+* GH Action tests: add setup-node to get npm cache
+* e2e Playwright: enhancing group visibilities and filtered list
+* e2e Playwright: enhancing page.openEditingFormWithLayer to wait for form
+* e2e Playwright: enhancing checking Getcapabilities URL in API
+
+## 3.8.12 - 2025-07-15
+
+### Funders
+
+* **[Cadageo](https://www.cadageo.com/)**
+* **[Faunalia](https://www.faunalia.eu/fr)** with @mind84
+* **[SMAVD](https://www.smavd.org/)**
+
+### Fixed
+
+* HTTP Etag for:
+  * media files get by GetMedia
+  * illustration files
+  * default illustration file
+* Media controller only allow GET and HEAD HTTP Method
+* Atlas: Typing error for hideFeaturesAtStartup
+* Locate By Layer does not support NULL values because of `DOMPurify.sanitize`
+* Editing - Fix getting wrong feature when layer has an SQL filter
+* Fix GetLegendGraphic Etag by adding layer
+* Allow the same pivot to be defined multiple times
+* Fix: set alphanumeric order in form filter
+
+### Backend
+
+* CI: copy .bundle.js and .bundle.js.map files whatever their names are
+
+## 3.8.11 - 2025-06-18
+
+### Funders
+
+* **Antonio Viscomi**
+* **[DVP SOLAR](https://dvpsolar.com/)**
+* **[Klein und Leber Gbr](https://www.gisgeometer.de/)**
+* **[Lozère province](https://lozere.fr/)**
+* **[SMICA](https://www.smica.fr/)**
+
+### Added
+
+* REST API on Lizmap repositories and projects
+* Upgrade `item_filter` to accept a comma separated list of values in Lizmap search, contribution from @meyerlor Klein und Leber Gbr
+
+### Fixed
+
+* Fixed a JavaScript error, contribution on the source code from @Antoviscomi
+* Tooltip: fix tooltip layer not removed as a tool layer
+* Optimize FTS query to use the index
+* Fix: 0 integer is transformed to an empty string by DOMPurify.sanitize()
+* Fix: Printing with text drawing/labels is broken
+* QGIS Server GetPrint Highlight Label Alignment
+* Add Etag to WMS GetLegendGraphic Request
+* WMS GetLegendGraphic:
+  * Perform GET request for single layer
+  * Put single layer request in project cache
+  * JS initialize Lizmap Application from not legacy code
+  * JS legacy map: defined an initialized property
+* Catching Guzzle client exceptions
+* Fix: zoomToFeatures in filter
+* Fix setting projection axis orientation in a simple way
+
 ## 3.8.10 - 2025-05-16
 
 ### Funders

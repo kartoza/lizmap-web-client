@@ -62,11 +62,6 @@ export class ProjectPage extends BasePage {
 
     // Docks
     /**
-     * Attribute table dock
-     * @type {Locator}
-     */
-    attributeTable;
-    /**
      * Main left dock
      * @type {Locator}
      */
@@ -97,6 +92,13 @@ export class ProjectPage extends BasePage {
      */
     search;
 
+    // form
+    /**
+     * Edition form
+     * @type {Locator}
+     */
+    editionForm;
+
     // Messages
     /**
      * Foreground message bar
@@ -121,12 +123,29 @@ export class ProjectPage extends BasePage {
         this.page.locator(`#attribute-layer-table-${name}`);
 
     /**
+     * Attribute table action bar for the given layer name
+     * @param {string} name Name of the layer
+     * @returns {Locator} Locator for attribute table action bar
+     */
+    attributeTableActionBar = (name) =>
+        this.page.locator(`#attribute-layer-${name} .attribute-layer-action-bar`);
+
+    /**
      * Editing field for the given field in the panel
      * @param {string} name Name of the field
-     * @returns {Locator}
+     * @returns {Locator} Locator for the field (input, select, textarea)
      */
     editingField = (name) =>
-        this.page.locator(`#jforms_view_edition input[name="${name}"]`);
+        this.page.locator('#jforms_view_edition')
+            .locator(`input[name="${name}"], select[name="${name}"], textarea[name="${name}"]`);
+
+    /**
+     * Editing submit for the given type
+     * @param {string} type Submit type: submit or cancel
+     * @returns {Locator} Locator for the submit button
+     */
+    editingSubmit = (type) =>
+        this.page.locator(`#jforms_view_edition__submit_${type}`);
 
     /**
      * Constructor for a QGIS project page
@@ -150,6 +169,7 @@ export class ProjectPage extends BasePage {
         this.switcher = page.locator('#button-switcher');
         this.baseLayerSelect = page.locator('#switcher-baselayer').getByRole('combobox')
         this.buttonEditing = page.locator('#button-edition');
+        this.editionForm = page.locator('#jforms_view_edition');
     }
 
     /**
@@ -162,8 +182,19 @@ export class ProjectPage extends BasePage {
     }
 
     /**
-     * waitForGetFeatureInfoRequest function
-     * waits for a GetFeatureInfo request
+     * Waits for a GetTile request
+     * @returns {Promise<Request>} The GetTile request
+     */
+    async waitForGetTileRequest() {
+        return this.page.waitForRequest(
+            request => request.method() === 'GET' &&
+            request.url().includes('WMTS') === true &&
+            request.url().includes('GetTile') === true
+        );
+    }
+
+    /**
+     * Waits for a GetFeatureInfo request
      * @returns {Promise<Request>} The GetFeatureInfo request
      */
     async waitForGetFeatureInfoRequest() {
@@ -174,16 +205,88 @@ export class ProjectPage extends BasePage {
     }
 
     /**
+     * Waits for a GetSelectionToken request
+     * @returns {Promise<Request>} The GetSelectionToken request
+     */
+    async waitForGetSelectionTokenRequest() {
+        return this.page.waitForRequest(
+            request => request.method() === 'POST' &&
+            request.postData()?.includes('WMS') === true &&
+            request.postData()?.includes('GETSELECTIONTOKEN') === true
+        );
+    }
+
+    /**
+     * Waits for a GetFilterToken request
+     * @returns {Promise<Request>} The GetFilterToken request
+     */
+    async waitForGetFilterTokenRequest() {
+        return this.page.waitForRequest(
+            request => request.method() === 'POST' &&
+            request.postData()?.includes('WMS') === true &&
+            request.postData()?.includes('GETFILTERTOKEN') === true
+        );
+    }
+
+    /**
+     * Waits for a GetFeature request
+     * @returns {Promise<Request>} The GetFeature request
+     */
+    async waitForGetFeatureRequest() {
+        return this.page.waitForRequest(
+            request => request.method() === 'POST' &&
+            request.postData()?.includes('WFS') === true &&
+            request.postData()?.includes('GetFeature') === true
+        );
+    }
+
+    /**
+     * Waits for a GetPlot request
+     * @param {undefined|string} plot_id The plot id in post data
+     * @returns {Promise<Request>} The GetFeature request
+     */
+    async waitForGetPlotRequest(plot_id=undefined) {
+        if (plot_id === undefined) {
+            return this.page.waitForRequest(
+                request => request.method() === 'POST' &&
+                request.postData()?.includes('getPlot') === true
+            );
+        }
+
+        return this.page.waitForRequest(
+            request => request.method() === 'POST' &&
+            request.postData()?.includes('getPlot') === true &&
+            request.postData()?.includes('plot_id') === true &&
+            request.postDataJSON()?.plot_id == plot_id
+        );
+    }
+
+    /**
      * open function
      * Open the URL for the given project and repository
      * @param {boolean} skip_plugin_update_warning Skip UI warning about QGIS plugin version, false by default.
      */
     async open(skip_plugin_update_warning = false){
         // By default, do not display warnings about old QGIS plugin or outdated Action JSON file
+        await this.openWithExtraParams({skip_plugin_update_warning: skip_plugin_update_warning});
+    }
+
+    /**
+     * Open the URL for the given project and repository with extra parameters
+     * @param {object} params Parameters to add to the default repository and project parameters.
+     * Example: {skip_plugin_update_warning: true}
+     * @returns {Promise<void>}
+     */
+    async openWithExtraParams(params){
         const searchParams = new URLSearchParams();
         searchParams.set('repository', this.repository);
         searchParams.set('project', this.project);
-        searchParams.set('skip_plugin_update_warning', `${skip_plugin_update_warning}`);
+        // By default, do not display warnings about old QGIS plugin or outdated Action JSON file
+        // It could be superseeded by the params parameter
+        searchParams.set('skip_plugin_update_warning', 'false');
+        for (const [key, value] of Object.entries(params)) {
+            searchParams.set(key, value);
+        }
         await gotoMap(
             `/index.php/view/map?${searchParams.toString()}`,
             this.page,
@@ -236,24 +339,73 @@ export class ProjectPage extends BasePage {
      */
     async editingSubmitForm(futureAction = 'close'){
         await this.page.locator('#jforms_view_edition_liz_future_action').selectOption(futureAction);
-        await this.page.locator('#jforms_view_edition__submit_submit').click();
+        await this.editingSubmit('submit').click();
         if (futureAction === 'close'){
             await expect(this.page.locator('#edition-form-container')).toBeHidden();
         } else {
             await expect(this.page.locator('#edition-form-container')).toBeVisible();
         }
-        await expect(this.page.locator('#lizmap-edition-message')).toBeVisible();
+        if(futureAction == 'close') {
+            await expect(this.page.locator('#lizmap-edition-message')).toBeVisible();
+        }
+    }
+
+    /**
+     * checkEditionFormTextField function
+     * check the given text input or text widget value
+     * @param {string} fieldName The name of the input/text widget field
+     * @param {string} fieldValue The expected field/text widget value
+     * @param {null|string} labelText The label text, optional if only input value should be checked
+     * @param {boolean} trim trim the text widget value (only for text widget checks)
+     */
+    async checkEditionFormTextField(fieldName, fieldValue, labelText = null, trim = false){
+        if (labelText !== null) {
+            await expect(this.editionForm.locator(`label[id='jforms_view_edition_${fieldName}_label']`))
+                .toHaveText(labelText);
+        }
+        const input = this.editionForm.locator(`input[id='jforms_view_edition_${fieldName}']`);
+        let value;
+        if (trim) {
+            value = (await input.inputValue()).replace(/\s+/g,' ').trim();
+        } else {
+            value = await input.inputValue();
+        }
+
+        expect(value).toBe(fieldValue);
+    }
+
+    /**
+     * fillEditionFormTextInput function
+     * fills the given text input with the given text value
+     * @param {string} inputName The name of the input field
+     * @param {string} value The value to be filled
+     */
+    async fillEditionFormTextInput(inputName ,value){
+        await this.editionForm.locator(`input[id='jforms_view_edition_${inputName}']`).fill(value);
     }
 
     /**
      * openEditingFormWithLayer function
-     * Open the editing panel with the given layer name form
+     * Open the editing panel with the given layer name form to add a feature
+     * and return the request generated by the opening of the form
      * @param {string} layer Name of the layer
+     * @returns {Promise<Request>} the request that was made to open the editing form
      */
     async openEditingFormWithLayer(layer){
+        // Open editing panel
         await this.buttonEditing.click();
+
+        // Select the layer to edit: add feature
         await this.page.locator('#edition-layer').selectOption({ label: layer });
+
+        // Create the promise to wait for the request to open the form
+        const editFeaturePromise = this.page.waitForRequest(/lizmap\/edition\/editFeature/);
+
+        // Click on the draw button to open the form
         await this.page.locator('a#edition-draw').click();
+
+        // Wait for the request to be made and return it
+        return await editFeaturePromise;
     }
 
     /**

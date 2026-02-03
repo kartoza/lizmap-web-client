@@ -12,6 +12,11 @@ const { expect } = require('@playwright/test');
  */
 
 /**
+ * Playwright APIRequestContext
+ * @typedef {import('@playwright/test').APIRequestContext} APIRequestContext
+ */
+
+/**
  * Integer
  * @typedef {number} int
  */
@@ -63,7 +68,7 @@ export async function gotoMap(url, page, mapMustLoad = true, layersInTreeView = 
 
     await expect(async () => {
         const response = await page.goto(url);
-        expect(response.status()).toBeLessThan(400);
+        expect(response?.status()).toBeLessThan(400);
     }).toPass({
         intervals: [1_000, 2_000, 10_000],
         timeout: 60_000
@@ -75,9 +80,14 @@ export async function gotoMap(url, page, mapMustLoad = true, layersInTreeView = 
         if (waitForGetLegendGraphics) {
             // Wait for WMS GetLegendGraphic promise
             const getLegendGraphicPromise = page.waitForRequest(
-                request => request.method() === 'POST' &&
+                request => (
+                    request.method() === 'POST' &&
                     request.postData() != null &&
                     request.postData()?.includes('GetLegendGraphic') === true
+                ) || (
+                    request.method() === 'GET' &&
+                    request.url().includes('GetLegendGraphic') === true
+                )
             );
             // Normal check about the map
             // Wait for WMS GetLegendGraphic
@@ -108,7 +118,7 @@ export async function reloadMap(page, check = true) {
 
     await expect(async () => {
         const response = await page.reload();
-        expect(response.status()).toBeLessThan(400);
+        expect(response?.status()).toBeLessThan(400);
     }).toPass({
         intervals: [1_000, 2_000, 10_000],
         timeout: 60_000
@@ -119,10 +129,14 @@ export async function reloadMap(page, check = true) {
     if (check) {
         // Wait for WMS GetLegendGraphic promise
         const getLegendGraphicPromise = page.waitForRequest(
-            request =>
+            request => (
                 request.method() === 'POST' &&
                 request.postData() != null &&
                 request.postData()?.includes('GetLegendGraphic') === true
+            ) || (
+                request.method() === 'GET' &&
+                request.url().includes('GetLegendGraphic') === true
+            )
         );
         // Normal check about the map
         // Wait for WMS GetLegendGraphic
@@ -194,20 +208,19 @@ export async function expectToHaveLengthCompare(title, parameters, expectedLengt
  */
 export async function checkJson(response, status = 200) {
     if (status < 400){
-        expect(response.ok()).toBeTruthy();
+        expect(response.ok(), 'Status: '+response.status()+' Content: '+(await response.text())).toBeTruthy();
     }
     expect(response.status()).toBe(status);
     expect(response.headers()['content-type']).toBe('application/json');
     return await response.json();
 }
 
-/* eslint-disable jsdoc/check-types */
 /**
  * Check parameters against an object containing expected parameters
  * @param {string}                        title Check title, for testing and debug
- * @param {string}                        parameters
- * @param {Object<string, string|RegExp>} expectedParameters
- * @returns {Promise<URLSearchParams>}
+ * @param {string}                        parameters List of parameters to check
+ * @param {{[key: string]: string|RegExp}} expectedParameters List of expected parameters
+ * @returns {Promise<URLSearchParams>}    List of promise with parameters
  */
 export async function expectParametersToContain(title, parameters, expectedParameters) {
     const searchParams = new URLSearchParams(parameters)
@@ -245,18 +258,53 @@ export async function expectParametersToContain(title, parameters, expectedParam
     return searchParams;
 }
 
+const adminPassword = "Basic " + btoa("admin:admin");
+
 /**
  * Create a GET request on a given URL with Basic authentication admin:admin
- * @param {import("playwright-core/types/types.js").APIRequestContext} request Request to use
+ * @param {APIRequestContext} request Request to use
  * @param {string} url URL to do a GET request on
- * @returns {Promise<import("playwright-core/types/types.js").APIResponse>} Response
+ * @returns {Promise<APIResponse>} Response
  */
-export async function requestWithAdminBasicAuth(request, url) {
+export async function requestGETWithAdminBasicAuth(request, url) {
     return await request.get(url,
         {
             headers: {
-                authorization: 'Basic YWRtaW46YWRtaW4=' // admin:admin
+                authorization: adminPassword
             }
         });
 }
-/* eslint-enable jsdoc/check-types */
+
+/**
+ * Create a POST request on a given URL with Basic authentication admin:admin
+ * @param {APIRequestContext} request Request to use
+ * @param {string} url URL to do a POST request on
+ * @param {object} data parameters for the request
+ * @returns {Promise<APIResponse>} Response
+ */
+export async function requestPOSTWithAdminBasicAuth(request, url, data) {
+    return await request.post(url,
+        {
+            headers: {
+                authorization: adminPassword
+            },
+            data: data
+        });
+}
+
+/**
+ * Create a DELETE request on a given URL with Basic authentication admin:admin
+ * @param {APIRequestContext} request Request to use
+ * @param {string} url URL to do a DELETE request on
+ * @param {object} data parameters for the request
+ * @returns {Promise<APIResponse>} Response
+ */
+export async function requestDELETEWithAdminBasicAuth(request, url, data) {
+    return await request.delete(url,
+        {
+            headers: {
+                authorization: adminPassword
+            },
+            data: data
+        });
+}

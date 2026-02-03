@@ -35,7 +35,7 @@ Creates image with `-dev` suffix:
 ```
 
 Creates images with version tags:
-- `kartoza/lizmap-web-client:3.8.10` (full version)
+- `kartoza/lizmap-web-client:3.8.15` (full version)
 - `kartoza/lizmap-web-client:3.8` (short version)
 - `kartoza/lizmap-web-client:ltr-3.8` (if LTR release)
 
