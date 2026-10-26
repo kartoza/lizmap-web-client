@@ -15,6 +15,17 @@ class memberCtrl extends jController
             return $rep;
         }
 
+        // Staging only: Lizmap admins may always print (no SAGTA token needed).
+        // Disabled unless SAGTA_ALLOW_ADMIN_PRINT is set in the environment.
+        if (filter_var(getEnv('SAGTA_ALLOW_ADMIN_PRINT'), FILTER_VALIDATE_BOOLEAN)
+            && jAcl2::check('lizmap.admin.access')) {
+            $rep = $this->getResponse('json');
+            $rep->data = array(
+                "allowed" => true
+            );
+            return $rep;
+        }
+
         // Safely get access token from session
         $accessToken = $_SESSION['at'] ?? null;
 
