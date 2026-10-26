@@ -51,6 +51,7 @@ class sagta
 
     public static function CallAPI($method, $url, $data = false, $headers = null)
     {
+        $content = null;
         try {
             $ch = curl_init();
 
@@ -129,14 +130,15 @@ class sagta
         );
 
         $result = self::CallAPI('POST', $url, $data_array);
-        $result_obj = json_decode($result);
+        $result_obj = json_decode((string) $result);
 
         $auth_token = array(
             "access_token"      => "",
             "refresh_token"     => ""
         );
 
-        if (property_exists($result_obj, 'access_token')) {
+        // SAGTA unreachable or not returning JSON: no token, but do not crash
+        if (is_object($result_obj) && property_exists($result_obj, 'access_token')) {
            // Save access_token and refresh_token to redis
             $auth_token = array(
                 "access_token"      => $result_obj->access_token,
@@ -170,7 +172,13 @@ class sagta
                 "{$GLOBALS['SAGTA_URL']}/user_info/",
                 false,
                 $headers);
-            $is_member = json_decode($is_member);
+            $is_member = json_decode((string) $is_member);
+
+            // SAGTA unreachable or not returning JSON: cannot verify, leave the
+            // current session untouched instead of crashing the page.
+            if (!is_object($is_member)) {
+                return;
+            }
 
             if (property_exists($is_member, 'username')) {
                 if ($userSession->login) {
