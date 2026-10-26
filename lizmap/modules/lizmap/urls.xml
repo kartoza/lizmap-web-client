@@ -3,6 +3,8 @@
     <url pathinfo="/"       action="default:index"/>
     <url pathinfo="/edition"       controller="edition"/>
     <url pathinfo="/features"       controller="features"/>
+    <url pathinfo="/member/index"       action="member:index"/> <!-- SAGTA membership check -->
+
     <url pathinfo="/geobookmark"       controller="geobookmark"/>
     <url pathinfo="/osm"       controller="osm"/>
     <url pathinfo="/project"       controller="project"/>
